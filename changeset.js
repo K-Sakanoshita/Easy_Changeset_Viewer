@@ -70,11 +70,11 @@ var EasyChangeset = (function () {
 				let bbox = "bbox=" + nw.lng + "," + se.lat + "," + se.lng + "," + nw.lat;
 
 				let sttime1 = new Date(start_datetime.value);
-				let sttime2 = new Date(sttime1.setHours(sttime1.getHours() + parseInt(timezones.value)));
+				let sttime2 = new Date(sttime1.setHours(sttime1.getHours() - parseInt(timezones.value)));
 				let sttime3 = basic.formatDate(sttime2, "YYYY-MM-DDThh:mm:00Z");
 
 				let edtime1 = new Date(end_datetime.value);
-				let edtime2 = new Date(edtime1.setHours(edtime1.getHours() + parseInt(timezones.value)));
+				let edtime2 = new Date(edtime1.setHours(edtime1.getHours() - parseInt(timezones.value)));
 				let edtime3 = basic.formatDate(edtime2, "YYYY-MM-DDThh:mm:00Z");
 
 				let times = "&time=" + sttime3 + "," + edtime3;
