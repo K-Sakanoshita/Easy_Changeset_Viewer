@@ -82,6 +82,7 @@ var EasyChangeset = (function () {
 				var xhr = new XMLHttpRequest();
 				console.log("GET: " + url);
 				markers.forEach(m => m.remove());
+				markers = [];
 				xhr.open('GET', url);
 				xhr.send();
 				xhr.onreadystatechange = function () {
@@ -90,7 +91,7 @@ var EasyChangeset = (function () {
 						if (getxml !== null) {
 							var changesets = Array.from(getxml.getElementsByTagName("changeset"));
 							changesets.forEach((element, idx) => {
-								let counts = parseFloat((element.getAttribute("changes_count")) / 30) + 0.2;
+								let counts = parseFloat((element.getAttribute("changes_count")) / 100) + 0.2;
 								counts = counts > 1.0 ? 1.0 : counts;
 								let minlat = element.getAttribute("min_lat");
 								let minlon = element.getAttribute("min_lon");
