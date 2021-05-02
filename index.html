@@ -1,0 +1,28 @@
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Easy Changeset Viewer</title>
+</head>
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="./basic.css" />
+<link rel="stylesheet" href="./lib/picker.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet-src.min.js"></script>
+<script defer src="./lib/leaflet-hash.js"></script>
+<script defer src="./lib/picker.min.js"></script>
+<script defer src="./lib/basiclib.js"></script>
+<script defer src="./changeset.js"></script>
+
+<body>
+    <div style="height: 30px;">
+        <span>Easy Changeset Viewer</span> /
+        Start DateTime: <input type="text" class="js-full-picker" id="start_datetime"> -
+        End DateTime: <input type="text" class="js-full-picker" id="end_datetime">
+        <select id="timezones"></select>
+        <button onclick="EasyChangeset.write_changeset()">view (newest search results 100)</button>
+    </div>
+    <div id="mapid" style="height: calc(100vh - 30px);width: 100vw;"></div>
+</body>
+
+</html>

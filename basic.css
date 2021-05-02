@@ -1,0 +1,13 @@
+body{
+    font-size: 14px;
+    margin: 0px;
+}
+
+input{
+    width: 10em;
+}
+
+span{
+    font-size: 18px;
+    font-weight: bold;
+}
