@@ -1,13 +1,27 @@
-body{
+body {
     font-size: 14px;
     margin: 0px;
 }
 
-input{
+input {
     width: 9em;
 }
 
-span{
+span {
     font-size: 18px;
     font-weight: bold;
+}
+
+.info {
+    border: solid 1px;
+    background-color: white;
+    border-radius: 4px;
+    opacity: 0.9;
+    padding: 4px;
+    font-size: 16px;
+    color: black;
+    max-height: 50vh;
+    max-width: 30vh;
+    overflow-y: scroll;
+    overflow-x: auto;
 }
