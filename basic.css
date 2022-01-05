@@ -1,27 +1,62 @@
+header {
+    font-size: 18px;
+    font-weight: bold;
+    height: 30px;
+    vertical-align: middle;
+}
+
 body {
-    font-size: 14px;
+    font-size: 16px;
     margin: 0px;
 }
 
-input {
-    width: 9em;
-}
-
-span {
-    font-size: 18px;
+button {
+    font-size: 120%;
     font-weight: bold;
 }
 
+a:link, a:visited, a:hover, a:active {
+    color: black;
+    text-decoration: none;
+    background: linear-gradient(transparent 70%, #FFFF00 0%);
+}
+
 .info {
+    font-size: 14px;
+    padding: 6px;
     border: solid 1px;
     background-color: white;
     border-radius: 4px;
     opacity: 0.9;
     padding: 4px;
-    font-size: 16px;
     color: black;
-    max-height: 50vh;
-    max-width: 30vh;
+    max-height: 40vh;
+    max-width: 50vw;
     overflow-y: scroll;
-    overflow-x: auto;
+    overflow-x: scroll;
+}
+
+div.mapid {
+    width: 100vw;
+    height: calc(var(--vh) * 100 - 30px);
+}
+
+div.center {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    padding: 4px;
+    margin: 4px;
+}
+
+div.dtpicker {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: normal;
+    padding: 4px;
+    margin: 4px;
+}
+
+div.dtpicker span {
+    border: 1px solid;
 }

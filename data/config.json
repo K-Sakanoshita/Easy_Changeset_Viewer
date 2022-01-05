@@ -1,6 +1,5 @@
 {
     "default": {
-        "SplashImage": "image/splash.png",
         "DefaultCenter": [
             38,
             138
@@ -10,14 +9,7 @@
         "MinZoomLevel": 10,
         "LimitZoomLevel": 15.5,
         "MaxZoomLevel": 20,
-        "FileName": "mapmaker",
         "SearchZoom": 16,
-        "__OverPassServer": "https://overpass.nchc.org.tw/api/interpreter",
-        "_OverPassServer": "https://overpass.kumi.systems/api/interpreter",
-        "OverPassServer": "https://overpass-api.de/api/interpreter",
-        "OverPassParams": "?data=[out:json][timeout:30]",
-        "Attribution": "<a href=\"https://www.maptiler.com/copyright/\" target=\"_blank\">© MapTiler</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">© OpenStreetMap contributors</a>",
-        "MapStyle": "https://api.maptiler.com/maps/371812ac-52d8-4ace-a720-a027cec01eac/style.json?key=Eq2IyrHsOEGFU1W1fvd7",
         "ColorDarken": 0.5,
         "Circle": {
             "radius": 8,
@@ -49,36 +41,11 @@
             "view": true,
             "size": 12,
             "color": "black"
-        },
-        "GoogleAnalytics": "G-5F0ZTR54WE"
-    },
-    "menu": [
-        {
-            "glot-model": "address",
-            "linkto": "html:<div class='d-flex align-items-center'><input type='search' id='search_input' class='form-control w-100'></input><button class='btn btn-primary' onclick='Mapmaker.poi_search($(\"#search_input\").val())'></button></div>",
-            "divider": true
-        },
-        {
-            "glot-model": "licence_title",
-            "linkto": "javascript:Mapmaker.licence()",
-            "divider": false
-        },
-        {
-            "glot-model": "about",
-            "linkto": "https://medium.com/@K_Sakanoshita/ea38ce4fd10",
-            "divider": false
-        },
-        {
-            "glot-model": "owner",
-            "linkto": "https://github.com/K-Sakanoshita/mapmaker",
-            "divider": true
-        },
-        {
-            "glot-model": "openstreetmap",
-            "linkto": "https://www.openstreetmap.org/about",
-            "divider": false
         }
-    ],
+    },
+    "basemenu": {
+        "html": "<div>start: <span id='start_datetime'></span><br>end : <span class='dtpicker' id='end_datetime'></span></div><div class='center'><select id='timezones'></select> <button id='view_btn'>view</button></div>"
+    },
     "effect": {
         "icon": {
             "x": 0,

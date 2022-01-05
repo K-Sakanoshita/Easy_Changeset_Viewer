@@ -1,6 +1,7 @@
 <html lang="ja">
 
 <head>
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1">
     <meta charset="utf-8" />
     <title>Easy Changeset Viewer</title>
 </head>
@@ -15,14 +16,10 @@
 <script defer src="./changeset.js"></script>
 
 <body>
-    <div style="height: 30px;">
-        <span>Easy Changeset Viewer</span> /
-        Start: <input type="text" class="js-full-picker" id="start_datetime"> -
-        End: <input type="text" class="js-full-picker" id="end_datetime">
-        <select id="timezones"></select>
-        <button onclick="easycs.rw_changeset()">view</button>
-    </div>
-    <div id="mapid" style="height: calc(100vh - 30px);width: 100vw;"></div>
+    <header>
+        <a href="https://github.com/K-Sakanoshita/Easy_Changeset_Viewer"><span>Easy Changeset Viewer</span></a>
+    </header>
+    <div id="mapid" class="mapid"></div>
 </body>
 
 </html>

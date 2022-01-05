@@ -3,14 +3,15 @@
 const OSMAPI = "https://api.openstreetmap.org/api/0.6/changesets";
 const COLORS = ["gold", "aquamarine", "blueviolet", "brass", "brown", "burlywood", "cadetblue",
 	"darkgreen", "darkkhaki", "darkolivegreen", "darkorange", "darksalmon", "darkseagreen", "deeppink",
-	"deepskyblue", "dimgray", "dodgerblue", "feldsper", "firebrick", "forestgreen", "greenyellow",
-	"hotpink", "indianred", "indigo", "khaki", "lavenderblush", "lightblue", "lightcoral", "lightgrey",
-	"lightpink", "lightsalmon", "lightseagreen", "lightskyblue","lightslategray","lightsteelblue"];
+	"deepskyblue", "dimgray", "dodgerblue", "thistle", "firebrick", "forestgreen", "greenyellow",
+	"hotpink", "indianred", "indigo", "khaki", "plum", "lightblue", "lightcoral", "lightgrey",
+	"lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightsteelblue"];
 
 // Global Variable
 var map;				// leaflet map object
 var markers = [];
 var Conf = {};			// Config Praams
+var pickers = [];
 const LANG = (window.navigator.userLanguage || window.navigator.language || window.navigator.browserLanguage).substr(0, 2) == "ja" ? "ja" : "en";
 
 // initialize leaflet
@@ -39,20 +40,51 @@ class EasyChangeset {
 	}
 
 	init() {
+		// set window size
+		let height = window.innerHeight;
+		document.documentElement.style.setProperty('--vh', height / 100 + 'px');
+
 		// set map layer
+		let control;
 		let def = Conf.default;
 		let osm_std = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 21, attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors' });
-		map = L.map('mapid', { center: def.DefaultCenter, zoom: def.DefaultZoom, zoomSnap: def.ZoomSnap, zoomDelta: def.ZoomSnap, maxZoom: def.MaxZoomLevel, layers: [osm_std] });
+		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, zoom: def.DefaultZoom, zoomSnap: def.ZoomSnap, zoomDelta: def.ZoomSnap, maxZoom: def.MaxZoomLevel, layers: [osm_std] });
 		new L.Hash(map);
 
 		// set date time
-		let dttimes = document.querySelectorAll('.js-full-picker');
-		dttimes.forEach(dttime => { new Picker(dttime, { controls: true, format: 'YYYY/MM/DD HH:mm', headers: true }) });
+		control = L.control({ position: "topleft" });			// Add BaseMenu
+		control.onAdd = function () {
+			this.ele = L.DomUtil.create('div', "info dtpicker");
+			this.ele.id = "basemenu";
+			return this.ele;
+		};
+		control.addTo(map);
+		basemenu.innerHTML = Conf.basemenu.html;
+		if (!basic.isSmartPhone()) {
+			basemenu.addEventListener("mouseover", function (e) { map.scrollWheelZoom.disable(); map.dragging.disable() }, false);
+			basemenu.addEventListener("mouseleave", function (e) { map.scrollWheelZoom.enable(); map.dragging.enable() }, false);
+			view_btn.addEventListener("click", (e) => { easycs.rw_changeset() });
+		} else {
+			basemenu.addEventListener("touchmove", (e) => { map.scrollWheelZoom.disable(); map.dragging.disable() });
+			basemenu.addEventListener("touchend", (e) => { map.scrollWheelZoom.enable(); map.dragging.enable() });
+			view_btn.addEventListener("touchstart", (e) => { easycs.rw_changeset() });
+			start_datetime.addEventListener("touchstart", (e) => { pickers["start_datetime"].show(); e.preventDefault(); });
+			end_datetime.addEventListener("touchstart", (e) => { pickers["end_datetime"].show(); e.preventDefault(); });
+		};
+
 		let now_datetime = new Date();
 		let old_datetime = new Date();
 		old_datetime = new Date(old_datetime.setDate(old_datetime.getDate() - 2));
-		start_datetime.value = basic.formatDate(old_datetime, "YYYY/MM/DD hh:mm");
-		end_datetime.value = basic.formatDate(now_datetime, "YYYY/MM/DD hh:mm");
+		start_datetime.innerText = basic.formatDate(old_datetime, "YYYY/MM/DD hh:mm");
+		end_datetime.innerText = basic.formatDate(now_datetime, "YYYY/MM/DD hh:mm");
+		let sttime = document.getElementById("start_datetime");
+		let edtime = document.getElementById("end_datetime");
+		let hidden = {
+			controls: true, format: 'YYYY/MM/DD HH:mm', headers: true,
+			hide: (ev) => { document.getElementById(ev.target.id).innerText = pickers[ev.target.id].getDate(true) }
+		};
+		pickers["start_datetime"] = new Picker(sttime, hidden);
+		pickers["end_datetime"] = new Picker(edtime, hidden);
 
 		// timezone
 		for (let i = -12; i < 14; i++) {
@@ -63,34 +95,32 @@ class EasyChangeset {
 		timezones.value = "9";
 
 		// mapper list
-		let mappers = L.control({ position: "bottomright" });			// Add BaseMenu
-		mappers.onAdd = function () {
+		control = L.control({ position: "bottomright" });			// Add BaseMenu
+		control.onAdd = function () {
 			this.ele = L.DomUtil.create('div', "info");
 			this.ele.id = "mappers";
 			return this.ele;
 		};
-		mappers.addTo(map);
-
+		control.addTo(map);
+		if (!basic.isSmartPhone()) {
+			mappers.addEventListener("mouseover", function () { map.scrollWheelZoom.disable(); map.dragging.disable(); }, false);
+			mappers.addEventListener("mouseleave", function () { map.scrollWheelZoom.enable(); map.dragging.enable(); }, false);
+		} else {
+			mappers.addEventListener("touchmove", (e) => { map.scrollWheelZoom.disable(); map.dragging.disable() });
+			mappers.addEventListener("touchend", (e) => { map.scrollWheelZoom.enable(); map.dragging.enable() });
+		};
 	}
 
 	rw_changeset() {
-		if (easycs.busy == true) {
-			alert("now busy... please wait.");
-		} else {
-			mappers.addEventListener("mouseover",
-				function () {
-					map.scrollWheelZoom.disable(); map.dragging.disable();
-				});
-
-			mappers.addEventListener("mouseleave",
-				function () {
-					map.scrollWheelZoom.enable(); map.dragging.enable();
-				});
-
-
+		if (!easycs.busy) {
 			easycs.busy = true;
 			easycs.read_changeset().then(changesets => {
 				easycs.write_changeset(changesets);
+				map.scrollWheelZoom.enable(); map.dragging.enable();
+				easycs.busy = false;
+			}).catch(() => {
+				console.log("error");
+				map.scrollWheelZoom.enable(); map.dragging.enable();
 				easycs.busy = false;
 			});
 		}
@@ -135,11 +165,11 @@ class EasyChangeset {
 	}
 
 	calc_changeset(edtime0) {
-		let sttime1 = new Date(start_datetime.value);
+		let sttime1 = new Date(start_datetime.innerText);
 		let sttime2 = new Date(sttime1.setHours(sttime1.getHours() - parseInt(timezones.value)));
 		let sttime3 = basic.formatDate(sttime2, "YYYY-MM-DDThh:mm:00Z");
 
-		let edtime1 = edtime0 == "" ? new Date(end_datetime.value) : new Date(edtime0);
+		let edtime1 = edtime0 == "" ? new Date(end_datetime.innerText) : new Date(edtime0);
 		let edtime2 = new Date(edtime1.setHours(edtime1.getHours() - parseInt(timezones.value)));
 		let edtime3 = basic.formatDate(edtime2, "YYYY-MM-DDThh:mm:00Z");
 		return [sttime3, edtime3];
@@ -183,16 +213,11 @@ class EasyChangeset {
 		});
 
 		let mappers_ary = Object.keys(mappers).map((k) => ({ username: k, counts: mappers[k].counts }));
-		mappers_ary.sort((a, b) => {
-			if (a.counts > b.counts) {
-				return -1;
-			} else {
-				return 1;
-			}
-		});
+		mappers_ary.sort((a, b) => { if (a.counts > b.counts) { return -1 } else { return 1 } });
 		let mapperlist = document.getElementById("mappers");
 		mappers_ary.forEach((element) => {
-			mapperlist.innerHTML += element.counts + " : " + element.username + "<br>";
+			let color = COLORS[mappers[element.username].no % COLORS.length];
+			mapperlist.innerHTML += `${element.counts} : <span style='color:${color}'>&#9632</span> ${element.username}<br>`;
 		});
 	}
 }
