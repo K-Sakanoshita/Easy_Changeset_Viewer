@@ -21,6 +21,11 @@ a:link, a:visited, a:hover, a:active {
     background: linear-gradient(transparent 70%, #FFFF00 0%);
 }
 
+.author{
+    font-size: 12px;
+    font-weight: normal;
+}
+
 .info {
     font-size: 14px;
     padding: 6px;
