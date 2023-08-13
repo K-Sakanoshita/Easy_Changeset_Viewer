@@ -1,15 +1,18 @@
 /*	Main Process */
 "use strict";
 const OSMAPI = "https://api.openstreetmap.org/api/0.6/changesets";
-const COLORS = ["gold", "aquamarine", "blueviolet", "brass", "brown", "burlywood", "cadetblue",
-	"darkgreen", "darkkhaki", "darkolivegreen", "darkorange", "darksalmon", "darkseagreen", "deeppink",
-	"deepskyblue", "dimgray", "dodgerblue", "thistle", "firebrick", "forestgreen", "greenyellow",
-	"hotpink", "indianred", "indigo", "khaki", "plum", "lightblue", "lightcoral", "lightgrey",
-	"lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightsteelblue"];
+const TEMPLATES = [
+	"#46c8e4", "#37a2ca", "#297db0", "#1d5b93", "#123a74", "#081d51",
+	"#b3b2f6", "#8e8cf1", "#6865ed", "#4240da", "#2624a5", "#100f6b",
+	"#e99ef3", "#dc66ed", "#b83dd6", "#842ab2", "#53198b", "#270b5e",
+	"#f4a1b7", "#ee6d8f", "#d53d63", "#a7253e", "#771320", "#48070c",
+	"#eaad54", "#cf8839", "#af6529", "#8d431b", "#69260f", "#420f06",
+	"#80cd38", "#5baa27", "#3c8919", "#23670e", "#114706", "#052902",
+	"#3cd365", "#29ae47", "#198b2e", "#0e681a", "#07480c", "#022904",
+];
 
 // Global Variable
 var map;				// leaflet map object
-var markers = [];
 var Conf = {};			// Config Praams
 var pickers = [];
 const LANG = (window.navigator.userLanguage || window.navigator.language || window.navigator.browserLanguage).substr(0, 2) == "ja" ? "ja" : "en";
@@ -37,6 +40,14 @@ window.onload = function () {
 class EasyChangeset {
 	constructor() {
 		this.busy = false;
+		this.colors = [];
+		for (let x = 0; x <= 5; x++) {
+			for (let y = 0; y <= 5; y++) {
+				this.colors.push(TEMPLATES[y * 6 + x]);
+			}
+		}
+		this.markers = [];
+		this.mappers = {};
 	}
 
 	init() {
@@ -115,22 +126,27 @@ class EasyChangeset {
 		if (!easycs.busy) {
 			easycs.busy = true;
 			easycs.read_changeset().then(changesets => {
-				easycs.write_changeset(changesets);
+				this.changesets = changesets;
+				easycs.writeChangeset(changesets);
+				easycs.writeMappers();
 				map.scrollWheelZoom.enable(); map.dragging.enable();
 				easycs.busy = false;
-			}).catch(() => {
+			});/*.catch(() => {
 				console.log("error");
 				map.scrollWheelZoom.enable(); map.dragging.enable();
 				easycs.busy = false;
-			});
+			});*/
 		}
 	}
 
+	clearMarker() {
+		this.markers.forEach(m => m.remove());
+		this.markers = [];
+	}
 	read_changeset() {
 		return new Promise((resolve, reject) => {
 			document.getElementById("mappers").innerHTML = "";
-			markers.forEach(m => m.remove());
-			markers = [];
+			this.clearMarker();
 			xhr_get([], "", resolve, reject);
 		});
 
@@ -175,56 +191,83 @@ class EasyChangeset {
 		return [sttime3, edtime3];
 	}
 
-	write_changeset(changesets) {
-		var mappers = {}, mapperno = 0;
+	writeChangeset(changesets) {
+		this.mappers = {}
+		let mapperno = 0;
 		if (changesets[0] == undefined) return;
 		changesets.forEach((element, idx) => {
-			let opacity = parseFloat((element.getAttribute("changes_count")) / 100) + 0.2;
-			opacity = opacity > 1.0 ? 1.0 : opacity;
-			let minlat = element.getAttribute("min_lat");
-			let minlon = element.getAttribute("min_lon");
-			let maxlat = element.getAttribute("max_lat");
-			let maxlon = element.getAttribute("max_lon");
-			let lat = (parseFloat(minlat) + parseFloat(maxlat)) / 2;
-			let lon = (parseFloat(minlon) + parseFloat(maxlon)) / 2;
-			let dttime = new Date(element.getAttribute("closed_at"));
 			let username = element.getAttribute("user");
-			let changeset = element.getAttribute("id");
 			let counts = parseInt(element.getAttribute("changes_count"));
-			if (username in mappers) {
-				mappers[username].counts += counts;
+			if (username in this.mappers) {
+				this.mappers[username].counts += counts;
 			} else {
-				mappers[username] = { "counts": counts, "no": mapperno++ };
+				this.mappers[username] = { "counts": counts, "no": mapperno++ };
 			}
-			let contents = `User Name: <a href="https://osm.org/user/${username}">${username}</a><br>`;
-			contents += basic.formatDate(dttime, "DateTime: YYYY/MM/DD hh:mm:ss<br>");
-			contents += `ChangeSet: <a href="https://osm.org/changeset/${changeset}">${changeset}</a><br>`;
-			contents += "Changes Count: " + counts;
-			let color = COLORS[mappers[username].no % COLORS.length];
-			let marker = L.circleMarker([lat, lon], {
-				"color": color,
-				"weight": 3,
-				"opacity": 0.6,
-				"fillColor": color,
-				"fillOpacity": opacity
-			}).bindPopup(contents).addTo(map);
-			marker.EasyChangeset_idx = idx;
-			markers.push(marker);
+			let polygon = this.#makeMarker(element)
+			this.markers.push(polygon);
+		});
+	}
+
+	filter(mapper) {
+		this.clearMarker();
+		this.changesets.forEach((element, idx) => {
+			let username = element.getAttribute("user");
+			if (username == mapper) {
+				let polygon = this.#makeMarker(element)
+				this.markers.push(polygon);
+			}
 		});
 
-		let mappers_ary = Object.keys(mappers).map((k) => ({ username: k, counts: mappers[k].counts }));
+	}
+
+	#makeMarker(element) {		// 指定したelementからマーカーを作成
+		let minlat = element.getAttribute("min_lat");
+		let minlon = element.getAttribute("min_lon");
+		let maxlat = element.getAttribute("max_lat");
+		let maxlon = element.getAttribute("max_lon");
+		let dttime = new Date(element.getAttribute("closed_at"));
+		let username = element.getAttribute("user");
+		let chgsetid = element.getAttribute("id");
+		let counts = parseInt(element.getAttribute("changes_count"));
+		const parser = new DOMParser();
+		let tagdom = parser.parseFromString(element.innerHTML, "text/html");
+		let comment = tagdom.querySelector("tag[k='comment']").getAttribute("v");
+		let contents = `User Name: <a href="https://osm.org/user/${username}">${username}</a><br>`;
+		contents += basic.formatDate(dttime, "DateTime: YYYY/MM/DD hh:mm:ss<br>");
+		contents += `ChangeSet: <a href="https://osm.org/changeset/${chgsetid}" target="_blank">${chgsetid}</a><br>`;
+		contents += "Changes Count: " + counts + "<br>";
+		contents += "Comment: " + comment;
+		let color = this.colors[this.mappers[username].no % this.colors.length];
+
+		let marker;
+		if ((minlat - maxlat) == 0 && (minlon - maxlon) == 0) {	// polygonでは表現出来ない時
+			let lat = (parseFloat(minlat) + parseFloat(maxlat)) / 2;
+			let lon = (parseFloat(minlon) + parseFloat(maxlon)) / 2;
+			marker = L.circleMarker([lat, lon], {
+				"weight": 3, "color": color, "opacity": 0.6, "fillColor": color, "fillOpacity": 0.6
+			}).bindPopup(contents).addTo(map);
+		} else {
+			let latlngs = [[minlat, minlon], [minlat, maxlon], [maxlat, maxlon], [maxlat, minlon]];
+			marker = L.polygon(latlngs, {
+				"weight": 3, "color": color, "opacity": 0.9, "fillColor": color, "fillOpacity": 0.6
+			}).bindPopup(contents).addTo(map);
+		}
+		return marker;
+	}
+
+	writeMappers() {
+		let mappers_ary = Object.keys(this.mappers).map((k) => ({ username: k, counts: this.mappers[k].counts }));
 		mappers_ary.sort((a, b) => { if (a.counts > b.counts) { return -1 } else { return 1 } });
 		let mapperlist = document.getElementById("mappers");
 		mappers_ary.forEach((element) => {
-			let color = COLORS[mappers[element.username].no % COLORS.length];
-			mapperlist.innerHTML += `${element.counts} : <span style='color:${color}'>&#9632</span> ${element.username}<br>`;
+			let color = this.colors[this.mappers[element.username].no % this.colors.length];
+			mapperlist.innerHTML += `<div style="cursor: pointer;" onclick="easycs.filter('${element.username}')">${element.counts} : <span style='color:${color}'>&#9632</span> ${element.username}</div>`;
 		});
 	}
 }
 const easycs = new EasyChangeset();
 
 function popup_icon(ev) {	// PopUpを表示
-	let idx = ev.target.EasyChangeset_idx;
 	L.responsivePopup({ "keepInView": true }).setContent(popcont).setLatLng(ev.latlng).openOn(map);
 	ev.target.openPopup();
 	return false;
