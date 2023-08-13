@@ -231,7 +231,13 @@ class EasyChangeset {
 		let counts = parseInt(element.getAttribute("changes_count"));
 		const parser = new DOMParser();
 		let tagdom = parser.parseFromString(element.innerHTML, "text/html");
-		let comment = tagdom.querySelector("tag[k='comment']").getAttribute("v");
+		let tagcom = tagdom.querySelector("tag[k='comment']");
+		let comment = "";
+		if (tagcom == null) {
+			console.log("no comment! / id: " + chgsetid);
+		} else {
+			comment = tagcom.getAttribute("v");
+		}
 		let contents = `User Name: <a href="https://osm.org/user/${username}">${username}</a><br>`;
 		contents += basic.formatDate(dttime, "DateTime: YYYY/MM/DD hh:mm:ss<br>");
 		contents += `ChangeSet: <a href="https://osm.org/changeset/${chgsetid}" target="_blank">${chgsetid}</a><br>`;
