@@ -1,19 +1,21 @@
 <html lang="ja">
 
 <head>
-    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1">
     <meta charset="utf-8" />
     <title>Easy Changeset Viewer</title>
 </head>
 <link rel="shortcut icon" href="favicon.ico" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="./basic.css" />
 <link rel="stylesheet" href="./lib/picker.min.css" />
-<script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet-src.min.js"></script>
-<script defer src="./lib/leaflet-hash.js"></script>
-<script defer src="./lib/picker.min.js"></script>
-<script defer src="./lib/basiclib.js"></script>
-<script defer src="./changeset.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="./lib/leaflet-hash.js"></script>
+<script src="./lib/picker.min.js"></script>
+<script src="./lib/basiclib.js"></script>
+<script src="./lib/winlib.js"></script>
+<script src="./changeset.js"></script>
 
 <body>
     <header>
@@ -21,6 +23,10 @@
         <span class="author"><a href="https://www.openstreetmap.org/user/K_Sakanoshita">by K.Sakanoshita</a></span>
     </header>
     <div id="mapid" class="mapid"></div>
+    <div class="details">
+        <div id="mappers"></div>
+        <div id="comments"></div>
+    </div>
 </body>
 
 </html>

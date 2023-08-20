@@ -44,7 +44,7 @@
         }
     },
     "basemenu": {
-        "html": "<div>start: <span id='start_datetime'></span><br>end : <span class='dtpicker' id='end_datetime'></span></div><div class='center'><select id='timezones'></select> <button id='view_btn'>view</button></div>"
+        "html": "<div class='center'><div style='display: flex'><span>start :</span><span class='dtpicker' id='start_datetime'></span></div><div style='display: flex'><span>end :</span><span class='dtpicker' id='end_datetime'></span></div><select id='timezones'></select><button id='view_btn'>view</button></div><div id='StatusView'></div>"
     },
     "effect": {
         "icon": {

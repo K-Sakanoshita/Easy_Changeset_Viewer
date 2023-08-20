@@ -15,53 +15,96 @@ button {
     font-weight: bold;
 }
 
-a:link, a:visited, a:hover, a:active {
+a:link,
+a:visited,
+a:hover,
+a:active {
     color: black;
     text-decoration: none;
-    background: linear-gradient(transparent 70%, #FFFF00 0%);
+    border-bottom: 2px solid #FFDD40;
 }
 
-.author{
+.author {
     font-size: 12px;
     font-weight: normal;
 }
 
 .info {
-    font-size: 14px;
-    padding: 6px;
     border: solid 1px;
-    background-color: white;
     border-radius: 4px;
-    opacity: 0.9;
-    padding: 4px;
+    background-color: white;
     color: black;
-    max-height: 40vh;
+    font-size: 16px;
+    opacity: 0.9;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    max-height: 30vh;
     max-width: 50vw;
-    overflow-y: scroll;
-    overflow-x: scroll;
+}
+
+.details {
+    background-color: white;
+    color: black;
+    display: flex;
+    flex-shrink: 0;
+    font-size: 14px;
+    height: 20vh;
+    opacity: 1;
 }
 
 div.mapid {
     width: 100vw;
-    height: calc(var(--vh) * 100 - 30px);
+    height: calc(80vh - 30px);
 }
 
 div.center {
     margin-left: auto;
     margin-right: auto;
     text-align: center;
-    padding: 4px;
-    margin: 4px;
 }
 
-div.dtpicker {
+.dtpicker {
+    border: 1px solid;
     overflow: hidden;
     font-size: 14px;
     font-weight: normal;
-    padding: 4px;
-    margin: 4px;
+    padding: 2px;
+    margin: 2px 2px 4px 2px;
 }
 
-div.dtpicker span {
-    border: 1px solid;
+#comments {
+    line-height: 2em;
+    padding: 4px;
+}
+
+#comments span {
+    font-weight: bold;
+}
+
+#mappers {
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    width: fit-content;
+    border: solid 1px;
+    border-radius: 4px;
+    padding: 4px;
+    white-space: nowrap;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#mappers div {
+    cursor: pointer
+}
+
+#comments {
+    border: solid 1px;
+    border-radius: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%
+}
+
+div.selected {
+    background-color: #bbddff;
 }

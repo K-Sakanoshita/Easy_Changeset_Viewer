@@ -15,6 +15,7 @@ const TEMPLATES = [
 var map;				// leaflet map object
 var Conf = {};			// Config Praams
 var pickers = [];
+var basic = new Basic;
 const LANG = (window.navigator.userLanguage || window.navigator.language || window.navigator.browserLanguage).substr(0, 2) == "ja" ? "ja" : "en";
 
 // initialize leaflet
@@ -47,7 +48,9 @@ class EasyChangeset {
 			}
 		}
 		this.markers = [];
-		this.mappers = {};
+		this.mappers = {};				// changesetから抽出したマッパーリスト
+		this.selectedMappers = [];		// mapperno(一時的なマッパー番号)の選択済みリスト
+		this.indexMappers = [];			// mapperno(一時的なマッパー番号)と名前の紐付け
 	}
 
 	init() {
@@ -71,13 +74,10 @@ class EasyChangeset {
 		};
 		control.addTo(map);
 		basemenu.innerHTML = Conf.basemenu.html;
+		disableControl("basemenu");
 		if (!basic.isSmartPhone()) {
-			basemenu.addEventListener("mouseover", function (e) { map.scrollWheelZoom.disable(); map.dragging.disable() }, false);
-			basemenu.addEventListener("mouseleave", function (e) { map.scrollWheelZoom.enable(); map.dragging.enable() }, false);
 			view_btn.addEventListener("click", (e) => { easycs.rw_changeset() });
 		} else {
-			basemenu.addEventListener("touchmove", (e) => { map.scrollWheelZoom.disable(); map.dragging.disable() });
-			basemenu.addEventListener("touchend", (e) => { map.scrollWheelZoom.enable(); map.dragging.enable() });
 			view_btn.addEventListener("touchstart", (e) => { easycs.rw_changeset() });
 			start_datetime.addEventListener("touchstart", (e) => { pickers["start_datetime"].show(); e.preventDefault(); });
 			end_datetime.addEventListener("touchstart", (e) => { pickers["end_datetime"].show(); e.preventDefault(); });
@@ -101,35 +101,37 @@ class EasyChangeset {
 		for (let i = -12; i < 14; i++) {
 			let num = ("0" + Math.abs(i) + ":00").slice(-5);
 			num = (i < 0 ? "-" : "+") + num;
-			WinCont.select_add("timezones", num, i);
+			winCont.select_add("timezones", num, i);
 		};
 		timezones.value = "9";
 
-		// mapper list
-		control = L.control({ position: "bottomright" });			// Add BaseMenu
-		control.onAdd = function () {
-			this.ele = L.DomUtil.create('div', "info");
-			this.ele.id = "mappers";
-			return this.ele;
-		};
-		control.addTo(map);
-		if (!basic.isSmartPhone()) {
-			mappers.addEventListener("mouseover", function () { map.scrollWheelZoom.disable(); map.dragging.disable(); }, false);
-			mappers.addEventListener("mouseleave", function () { map.scrollWheelZoom.enable(); map.dragging.enable(); }, false);
-		} else {
-			mappers.addEventListener("touchmove", (e) => { map.scrollWheelZoom.disable(); map.dragging.disable() });
-			mappers.addEventListener("touchend", (e) => { map.scrollWheelZoom.enable(); map.dragging.enable() });
-		};
+	}
+
+	clearMarker() {
+		this.markers.forEach(m => m.remove());
+		this.markers = [];
+	}
+
+	clearMapper() {
+		document.getElementById("mappers").innerHTML = "";
+		document.getElementById("comments").innerHTML = "";
+		this.mappers = {};
 	}
 
 	rw_changeset() {
 		if (!easycs.busy) {
 			easycs.busy = true;
-			easycs.read_changeset().then(changesets => {
+			view_btn.setAttribute("disabled", true);
+			StatusView.innerHTML = "now working..";
+			this.clearMapper();
+			this.clearMarker();
+			easycs.readChangeset().then(changesets => {
 				this.changesets = changesets;
-				easycs.writeChangeset(changesets);
+				easycs.writeMaps(changesets);
 				easycs.writeMappers();
 				map.scrollWheelZoom.enable(); map.dragging.enable();
+				view_btn.removeAttribute("disabled");
+				StatusView.innerHTML = "";
 				easycs.busy = false;
 			});/*.catch(() => {
 				console.log("error");
@@ -139,14 +141,8 @@ class EasyChangeset {
 		}
 	}
 
-	clearMarker() {
-		this.markers.forEach(m => m.remove());
-		this.markers = [];
-	}
-	read_changeset() {
+	readChangeset() {
 		return new Promise((resolve, reject) => {
-			document.getElementById("mappers").innerHTML = "";
-			this.clearMarker();
 			xhr_get([], "", resolve, reject);
 		});
 
@@ -154,7 +150,7 @@ class EasyChangeset {
 			let nw = map.getBounds().getNorthWest();
 			let se = map.getBounds().getSouthEast()
 			let bbox = "bbox=" + nw.lng + "," + se.lat + "," + se.lng + "," + nw.lat;
-			let times = edtime == "" ? easycs.calc_changeset("") : easycs.calc_changeset(edtime);
+			let times = edtime == "" ? calcStartEndTime("") : calcStartEndTime(edtime);
 			var url = OSMAPI + "?" + bbox + "&time=" + times[0] + "," + times[1];
 			var xhr = new XMLHttpRequest();
 			console.log("GET: " + url);
@@ -167,7 +163,7 @@ class EasyChangeset {
 						let newchanges = Array.from(getxml.getElementsByTagName("changeset"));
 						changesets = changesets.concat(newchanges);
 						if (newchanges.length >= 100) {
-							edtime = easycs.calc_changeset(newchanges[newchanges.length - 1].attributes.created_at.nodeValue)[1];
+							edtime = calcStartEndTime(newchanges[newchanges.length - 1].attributes.created_at.nodeValue)[1];
 							xhr_get(changesets, edtime, resolve, reject);
 						} else {
 							resolve(changesets);
@@ -178,47 +174,61 @@ class EasyChangeset {
 				}
 			}
 		}
+
+		function calcStartEndTime(edtime0) {		// changesetの取得期間を計算
+			let sttime1 = new Date(start_datetime.innerText);
+			let sttime2 = new Date(sttime1.setHours(sttime1.getHours() - parseInt(timezones.value)));
+			let sttime3 = basic.formatDate(sttime2, "YYYY-MM-DDThh:mm:00Z");
+
+			let edtime1 = edtime0 == "" ? new Date(end_datetime.innerText) : new Date(edtime0);
+			let edtime2 = new Date(edtime1.setHours(edtime1.getHours() - parseInt(timezones.value)));
+			let edtime3 = basic.formatDate(edtime2, "YYYY-MM-DDThh:mm:00Z");
+			return [sttime3, edtime3];
+		}
 	}
 
-	calc_changeset(edtime0) {
-		let sttime1 = new Date(start_datetime.innerText);
-		let sttime2 = new Date(sttime1.setHours(sttime1.getHours() - parseInt(timezones.value)));
-		let sttime3 = basic.formatDate(sttime2, "YYYY-MM-DDThh:mm:00Z");
-
-		let edtime1 = edtime0 == "" ? new Date(end_datetime.innerText) : new Date(edtime0);
-		let edtime2 = new Date(edtime1.setHours(edtime1.getHours() - parseInt(timezones.value)));
-		let edtime3 = basic.formatDate(edtime2, "YYYY-MM-DDThh:mm:00Z");
-		return [sttime3, edtime3];
-	}
-
-	writeChangeset(changesets) {
-		this.mappers = {}
+	writeMaps(changesets) {
+		console.log("writeMaps");
+		const parser = new DOMParser();
+		this.mappers = {};
 		let mapperno = 0;
 		if (changesets[0] == undefined) return;
 		changesets.forEach((element, idx) => {
 			let username = element.getAttribute("user");
 			let counts = parseInt(element.getAttribute("changes_count"));
+			let chgsetid = element.getAttribute("id");
+			let tagdom = parser.parseFromString(element.innerHTML, "text/html");
+			let tagcom = tagdom.querySelector("tag[k='comment']");
+			let comment = tagcom !== null ? [chgsetid, tagcom.getAttribute("v")] : [];
 			if (username in this.mappers) {
 				this.mappers[username].counts += counts;
+				this.mappers[username].comments.push(comment);
 			} else {
-				this.mappers[username] = { "counts": counts, "no": mapperno++ };
+				this.mappers[username] = { "counts": counts, "no": mapperno, "comments": [comment] };
+				this.indexMappers[mapperno++] = username;
 			}
-			let polygon = this.#makeMarker(element)
+			let polygon = this.#makeMarker(element);
 			this.markers.push(polygon);
 		});
-	}
+	};
 
-	filter(mapper) {
+	filterMaps(mappers) {
+		console.log("filterMaps");
 		this.clearMarker();
+		document.getElementById("comments").innerHTML = "";
+		let already = [];
 		this.changesets.forEach((element, idx) => {
 			let username = element.getAttribute("user");
-			if (username == mapper) {
-				let polygon = this.#makeMarker(element)
+			if (mappers.indexOf(username) > -1) {		// usernameが含まれていたら
+				let polygon = this.#makeMarker(element);
 				this.markers.push(polygon);
-			}
+				if (already.indexOf(username) == -1) {
+					this.makeComments(username);
+					already.push(username);
+				}
+			};
 		});
-
-	}
+	};
 
 	#makeMarker(element) {		// 指定したelementからマーカーを作成
 		let minlat = element.getAttribute("min_lat");
@@ -261,20 +271,52 @@ class EasyChangeset {
 		return marker;
 	}
 
+	// マッパー一覧作成
 	writeMappers() {
-		let mappers_ary = Object.keys(this.mappers).map((k) => ({ username: k, counts: this.mappers[k].counts }));
+		console.log("writeMappers");
+		let mappers_ary = Object.keys(this.mappers).map((k) => ({ username: k, counts: this.mappers[k].counts, no: this.mappers[k].no, comments: this.mappers[k].comments }));
 		mappers_ary.sort((a, b) => { if (a.counts > b.counts) { return -1 } else { return 1 } });
 		let mapperlist = document.getElementById("mappers");
 		mappers_ary.forEach((element) => {
 			let color = this.colors[this.mappers[element.username].no % this.colors.length];
-			mapperlist.innerHTML += `<div style="cursor: pointer;" onclick="easycs.filter('${element.username}')">${element.counts} : <span style='color:${color}'>&#9632</span> ${element.username}</div>`;
+			mapperlist.insertAdjacentHTML('beforeend', `<div id="mapper_${element.no}" class="selected" onclick="easycs.toggleMapper(${element.no})"><span>${element.counts} : <span style='color:${color}'>&#9632</span> ${element.username}</span></div>`);
+			this.selectedMappers[element.no] = true;
+			this.makeComments(element.username);
 		});
+	}
+
+	// コメント欄作成
+	makeComments(username) {
+		let commentlist = document.getElementById("comments");
+		let contents = `<div><span><a href="https://osm.org/user/${username}" target="_blank">${username}</a></span><br>`;
+		this.mappers[username].comments.forEach(comment => {
+			contents += `<a href="https://www.openstreetmap.org/changeset/${comment[0]}" target="_blank">${comment[0]}</a> : ${comment[1]}<br>`;
+		});
+		commentlist.insertAdjacentHTML('beforeend', contents + "</div>");
+	}
+
+	// クリックしたマッパーを表示/非表示
+	toggleMapper(mapperno) {
+		console.log("toggleMapper");
+		let line = document.getElementById(`mapper_${mapperno}`);
+		line.classList.toggle("selected");
+		this.selectedMappers[mapperno] = !this.selectedMappers[mapperno];
+		let mappernames = [];
+		this.selectedMappers.forEach((selected, mapperno) => {
+			if (selected) mappernames.push(this.indexMappers[mapperno]);
+		});
+		this.filterMaps(mappernames);
 	}
 }
 const easycs = new EasyChangeset();
 
-function popup_icon(ev) {	// PopUpを表示
-	L.responsivePopup({ "keepInView": true }).setContent(popcont).setLatLng(ev.latlng).openOn(map);
-	ev.target.openPopup();
-	return false;
-};
+function disableControl(domid) {
+	let dom = document.getElementById(domid);
+	if (!basic.isSmartPhone()) {
+		dom.addEventListener("mouseover", function () { map.scrollWheelZoom.disable(); map.dragging.disable(); }, false);
+		dom.addEventListener("mouseleave", function () { map.scrollWheelZoom.enable(); map.dragging.enable(); }, false);
+	} else {
+		dom.addEventListener("touchmove", (e) => { map.scrollWheelZoom.disable(); map.dragging.disable() });
+		dom.addEventListener("touchend", (e) => { map.scrollWheelZoom.enable(); map.dragging.enable() });
+	};
+}
