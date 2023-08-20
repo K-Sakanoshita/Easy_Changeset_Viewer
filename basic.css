@@ -24,6 +24,10 @@ a:active {
     border-bottom: 2px solid #FFDD40;
 }
 
+.leaflet-popup-content {
+    font-size: 14px !important;
+}
+
 .author {
     font-size: 12px;
     font-weight: normal;
@@ -48,13 +52,13 @@ a:active {
     display: flex;
     flex-shrink: 0;
     font-size: 14px;
-    height: 20vh;
+    height: 25vh;
     opacity: 1;
 }
 
 div.mapid {
     width: 100vw;
-    height: calc(80vh - 30px);
+    height: calc(75vh - 30px);
 }
 
 div.center {

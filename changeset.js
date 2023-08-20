@@ -48,9 +48,7 @@ class EasyChangeset {
 			}
 		}
 		this.markers = [];
-		this.mappers = {};				// changesetから抽出したマッパーリスト
-		this.selectedMappers = [];		// mapperno(一時的なマッパー番号)の選択済みリスト
-		this.indexMappers = [];			// mapperno(一時的なマッパー番号)と名前の紐付け
+		this.mappers = [];				// changesetから抽出したマッパーリスト
 	}
 
 	init() {
@@ -76,9 +74,9 @@ class EasyChangeset {
 		basemenu.innerHTML = Conf.basemenu.html;
 		disableControl("basemenu");
 		if (!basic.isSmartPhone()) {
-			view_btn.addEventListener("click", (e) => { easycs.rw_changeset() });
+			view_btn.addEventListener("click", (e) => { easycs.readWriteChangeset() });
 		} else {
-			view_btn.addEventListener("touchstart", (e) => { easycs.rw_changeset() });
+			view_btn.addEventListener("touchstart", (e) => { easycs.readWriteChangeset() });
 			start_datetime.addEventListener("touchstart", (e) => { pickers["start_datetime"].show(); e.preventDefault(); });
 			end_datetime.addEventListener("touchstart", (e) => { pickers["end_datetime"].show(); e.preventDefault(); });
 		};
@@ -104,40 +102,23 @@ class EasyChangeset {
 			winCont.select_add("timezones", num, i);
 		};
 		timezones.value = "9";
-
 	}
 
-	clearMarker() {
-		this.markers.forEach(m => m.remove());
-		this.markers = [];
-	}
-
-	clearMapper() {
-		document.getElementById("mappers").innerHTML = "";
-		document.getElementById("comments").innerHTML = "";
-		this.mappers = {};
-	}
-
-	rw_changeset() {
-		if (!easycs.busy) {
-			easycs.busy = true;
+	readWriteChangeset() {
+		if (!this.busy) {
+			this.busy = true;
 			view_btn.setAttribute("disabled", true);
 			StatusView.innerHTML = "now working..";
-			this.clearMapper();
-			this.clearMarker();
-			easycs.readChangeset().then(changesets => {
+			this.readChangeset().then(changesets => {
 				this.changesets = changesets;
-				easycs.writeMaps(changesets);
-				easycs.writeMappers();
+				this.makeMappers(changesets);
+				this.writeMaps(changesets);
+				this.writeMappers(changesets);
 				map.scrollWheelZoom.enable(); map.dragging.enable();
 				view_btn.removeAttribute("disabled");
 				StatusView.innerHTML = "";
-				easycs.busy = false;
-			});/*.catch(() => {
-				console.log("error");
-				map.scrollWheelZoom.enable(); map.dragging.enable();
-				easycs.busy = false;
-			});*/
+				this.busy = false;
+			});
 		}
 	}
 
@@ -189,71 +170,58 @@ class EasyChangeset {
 
 	writeMaps(changesets) {
 		console.log("writeMaps");
-		const parser = new DOMParser();
-		this.mappers = {};
-		let mapperno = 0;
-		if (changesets[0] == undefined) return;
+		this.clearMarker();
 		changesets.forEach((element, idx) => {
-			let username = element.getAttribute("user");
-			let counts = parseInt(element.getAttribute("changes_count"));
-			let chgsetid = element.getAttribute("id");
-			let tagdom = parser.parseFromString(element.innerHTML, "text/html");
-			let tagcom = tagdom.querySelector("tag[k='comment']");
-			let comment = tagcom !== null ? [chgsetid, tagcom.getAttribute("v")] : [];
-			if (username in this.mappers) {
-				this.mappers[username].counts += counts;
-				this.mappers[username].comments.push(comment);
-			} else {
-				this.mappers[username] = { "counts": counts, "no": mapperno, "comments": [comment] };
-				this.indexMappers[mapperno++] = username;
-			}
 			let polygon = this.#makeMarker(element);
 			this.markers.push(polygon);
 		});
-	};
+	}
 
+	// 指定したmappersリストをフィルタ表示
 	filterMaps(mappers) {
 		console.log("filterMaps");
 		this.clearMarker();
 		document.getElementById("comments").innerHTML = "";
-		let already = [];
 		this.changesets.forEach((element, idx) => {
-			let username = element.getAttribute("user");
-			if (mappers.indexOf(username) > -1) {		// usernameが含まれていたら
-				let polygon = this.#makeMarker(element);
-				this.markers.push(polygon);
-				if (already.indexOf(username) == -1) {
-					this.makeComments(username);
-					already.push(username);
-				}
+			if (mappers.indexOf(element.getAttribute("user")) > -1) {		// userが含まれていたら
+				this.markers.push(this.#makeMarker(element));
 			};
+		});
+		let already = [];
+		this.mappers.forEach(mapper => {
+			if (already.indexOf(mapper.name) == -1 && mappers.indexOf(mapper.name) > -1) {
+				this.makeComments(mapper.name);
+				already.push(mapper.name);
+			}
 		});
 	};
 
+	clearMarker() {
+		this.markers.forEach(m => m.remove());
+		this.markers = [];
+	}
+
 	#makeMarker(element) {		// 指定したelementからマーカーを作成
+		const parser = new DOMParser();
 		let minlat = element.getAttribute("min_lat");
 		let minlon = element.getAttribute("min_lon");
 		let maxlat = element.getAttribute("max_lat");
 		let maxlon = element.getAttribute("max_lon");
 		let dttime = new Date(element.getAttribute("closed_at"));
-		let username = element.getAttribute("user");
 		let chgsetid = element.getAttribute("id");
+		let username = element.getAttribute("user");
+		let mapper = this.mappers.find(u => u.name === username);
+		let rank = mapper.rank
 		let counts = parseInt(element.getAttribute("changes_count"));
-		const parser = new DOMParser();
 		let tagdom = parser.parseFromString(element.innerHTML, "text/html");
 		let tagcom = tagdom.querySelector("tag[k='comment']");
-		let comment = "";
-		if (tagcom == null) {
-			console.log("no comment! / id: " + chgsetid);
-		} else {
-			comment = tagcom.getAttribute("v");
-		}
-		let contents = `User Name: <a href="https://osm.org/user/${username}">${username}</a><br>`;
+		let comment = tagcom !== null ? tagcom.getAttribute("v") : "";
+		let contents = `User Name: <a href="https://osm.org/user/${username}">${username}</a> / <button onclick="easycs.toggleMapper(${rank})">check clear</button><br>`;
 		contents += basic.formatDate(dttime, "DateTime: YYYY/MM/DD hh:mm:ss<br>");
 		contents += `ChangeSet: <a href="https://osm.org/changeset/${chgsetid}" target="_blank">${chgsetid}</a><br>`;
 		contents += "Changes Count: " + counts + "<br>";
 		contents += "Comment: " + comment;
-		let color = this.colors[this.mappers[username].no % this.colors.length];
+		let color = this.colors[rank % this.colors.length];
 
 		let marker;
 		if ((minlat - maxlat) == 0 && (minlon - maxlon) == 0) {	// polygonでは表現出来ない時
@@ -271,41 +239,85 @@ class EasyChangeset {
 		return marker;
 	}
 
-	// マッパー一覧作成
-	writeMappers() {
-		console.log("writeMappers");
-		let mappers_ary = Object.keys(this.mappers).map((k) => ({ username: k, counts: this.mappers[k].counts, no: this.mappers[k].no, comments: this.mappers[k].comments }));
-		mappers_ary.sort((a, b) => { if (a.counts > b.counts) { return -1 } else { return 1 } });
-		let mapperlist = document.getElementById("mappers");
-		mappers_ary.forEach((element) => {
-			let color = this.colors[this.mappers[element.username].no % this.colors.length];
-			mapperlist.insertAdjacentHTML('beforeend', `<div id="mapper_${element.no}" class="selected" onclick="easycs.toggleMapper(${element.no})"><span>${element.counts} : <span style='color:${color}'>&#9632</span> ${element.username}</span></div>`);
-			this.selectedMappers[element.no] = true;
-			this.makeComments(element.username);
+	clearMapper() {
+		document.getElementById("mappers").innerHTML = "";
+		document.getElementById("comments").innerHTML = "";
+		this.mappers = [];
+	}
+
+	// changesetsからmappersを作成
+	makeMappers(changesets) {
+		console.log("makeMappers");
+		const parser = new DOMParser();
+		this.clearMapper();
+		if (changesets[0] == undefined) return;
+		changesets.forEach((element, idx) => {
+			let username = element.getAttribute("user");
+			let counts = parseInt(element.getAttribute("changes_count"));
+			let chgsetid = element.getAttribute("id");
+			let tagdom = parser.parseFromString(element.innerHTML, "text/html");
+			let tagcom = tagdom.querySelector("tag[k='comment']");
+			let dttime = basic.formatDate(new Date(element.getAttribute("closed_at")), "YYYY/MM/DD hh:mm:ss");
+			let comment = tagcom !== null ? [chgsetid, dttime, tagcom.getAttribute("v")] : [];
+			let mapper = this.mappers.find(u => u.name === username);
+			if (mapper == undefined) {
+				this.mappers.push({ "name": username, "counts": counts, "comments": [comment], "rank": 0, "view": true });
+			} else {
+				mapper.counts += counts;
+				mapper.comments.push(comment);
+			}
+		});
+		this.mappers.sort((a, b) => { if (a.counts > b.counts) { return -1 } else { return 1 } });
+		let rank = 1;
+		this.mappers.forEach(mapper => {
+			mapper.rank = rank++
+			mapper.color = this.colors[(mapper.rank - 1) % this.colors.length];
 		});
 	}
 
-	// コメント欄作成
+	// マッパー一覧作成
+	writeMappers() {
+		console.log("writeMappers");
+		let mapperlist = document.getElementById("mappers");
+		mapperlist.insertAdjacentHTML('beforeend', Conf.mapperlist.html);
+		this.mappers.forEach(mapper => {
+			let color = this.colors[(mapper.rank - 1) % this.colors.length];
+			mapperlist.insertAdjacentHTML('beforeend', `<div id="mapper_${mapper.rank}" class="selected" onclick="easycs.toggleMapper(${mapper.rank})"><span>${mapper.counts} : <span style='color:${color}'>&#9632</span> ${mapper.name}</span></div>`);
+			this.makeComments(mapper.name);
+		});
+	}
+
+	// コメント欄作成(既存コメントに追記)
 	makeComments(username) {
 		let commentlist = document.getElementById("comments");
 		let contents = `<div><span><a href="https://osm.org/user/${username}" target="_blank">${username}</a></span><br>`;
-		this.mappers[username].comments.forEach(comment => {
-			contents += `<a href="https://www.openstreetmap.org/changeset/${comment[0]}" target="_blank">${comment[0]}</a> : ${comment[1]}<br>`;
+		let mapper = this.mappers.find(u => u.name === username);
+		mapper.comments.forEach(comment => {
+			contents += `<a href="https://www.openstreetmap.org/changeset/${comment[0]}" target="_blank">${comment[1]}</a> : ${comment[2]}<br>`;
 		});
 		commentlist.insertAdjacentHTML('beforeend', contents + "</div>");
 	}
 
 	// クリックしたマッパーを表示/非表示
-	toggleMapper(mapperno) {
+	toggleMapper(rank) {
 		console.log("toggleMapper");
-		let line = document.getElementById(`mapper_${mapperno}`);
+		let line = document.getElementById(`mapper_${rank}`);
 		line.classList.toggle("selected");
-		this.selectedMappers[mapperno] = !this.selectedMappers[mapperno];
-		let mappernames = [];
-		this.selectedMappers.forEach((selected, mapperno) => {
-			if (selected) mappernames.push(this.indexMappers[mapperno]);
+		let mapper = this.mappers.find(u => u.rank === rank);
+		mapper.view = !(mapper.view);
+		let names = this.mappers.map(mapper => { if (mapper.view) return mapper.name });
+		this.filterMaps(names);
+	}
+
+	// All check & clear
+	controlCheck(view) {
+		console.log("controlCheck");
+		this.mappers.forEach(mapper => {
+			mapper.view = view;
+			let line = document.getElementById(`mapper_${mapper.rank}`);
+			line.classList[view ? "add" : "remove"]("selected");
 		});
-		this.filterMaps(mappernames);
+		this.filterMaps(view ? this.mappers.map(mapper => mapper.name) : []);
 	}
 }
 const easycs = new EasyChangeset();

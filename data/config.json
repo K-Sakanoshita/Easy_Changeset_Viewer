@@ -44,7 +44,10 @@
         }
     },
     "basemenu": {
-        "html": "<div class='center'><div style='display: flex'><span>start :</span><span class='dtpicker' id='start_datetime'></span></div><div style='display: flex'><span>end :</span><span class='dtpicker' id='end_datetime'></span></div><select id='timezones'></select><button id='view_btn'>view</button></div><div id='StatusView'></div>"
+        "html": "<div class='center'><div style='display: flex'><span>start :</span><span class='dtpicker' id='start_datetime'></span></div><div style='display: flex'><span>end :</span><span class='dtpicker' id='end_datetime'></span></div><select id='timezones'></select> <button id='view_btn'>view</button><div id='StatusView'></div></div>"
+    },
+    "mapperlist": {
+        "html": "<div style='margin: 4px'><button onclick='easycs.controlCheck(true)'>all check</button> <button onclick='easycs.controlCheck(false)'>all clear</button></div>"
     },
     "effect": {
         "icon": {
