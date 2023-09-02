@@ -1,13 +1,13 @@
 /*	Main Process */
 "use strict";
-const OSMAPI = "https://api.openstreetmap.org/api/0.6/changesets";
 
 // Global Variable
 var map;				// leaflet map object
 var Conf = {};			// Config Praams
 var pickers = [];
-var basic = new Basic;
+var basic = new Basic();
 const LANG = (window.navigator.userLanguage || window.navigator.language || window.navigator.browserLanguage).substr(0, 2) == "ja" ? "ja" : "en";
+const params = new URLSearchParams(window.location.search);
 
 // initialize leaflet
 window.onload = function () {
@@ -42,11 +42,13 @@ class EasyChangeset {
 		// set map layer
 		let control;
 		let def = Conf.default;
-		let osm_std = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 21, attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors' });
+		let key = "OSM_Mono";
+		let options = { "attribution": Conf.tile[key].copyright, "maxNativeZoom": Conf.tile[key].maxNativeZoom, "filter": Conf.tile[key].filter };
+		let osm_std = L.tileLayer.colorFilter(Conf.tile[key].url, options);
 		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, zoom: def.DefaultZoom, zoomSnap: def.ZoomSnap, zoomDelta: def.ZoomSnap, maxZoom: def.MaxZoomLevel, layers: [osm_std] });
 		new L.Hash(map);
 
-		// set date time
+		// set datetime window
 		control = L.control({ position: "topleft" });			// Add BaseMenu
 		control.onAdd = function () {
 			this.ele = L.DomUtil.create('div', "info dtpicker");
@@ -70,19 +72,22 @@ class EasyChangeset {
 			end_datetime.addEventListener("touchstart", (e) => { pickers["end_datetime"].show(); e.preventDefault(); });
 		};
 
-		let now_datetime = new Date();
-		let old_datetime = new Date();
-		old_datetime = new Date(old_datetime.setDate(old_datetime.getDate() - 2));
-		start_datetime.innerText = basic.formatDate(old_datetime, "YYYY/MM/DD hh:mm");
-		end_datetime.innerText = basic.formatDate(now_datetime, "YYYY/MM/DD hh:mm");
-		let sttime = document.getElementById("start_datetime");
-		let edtime = document.getElementById("end_datetime");
+		if (params.get("sttime") !== null && params.get("edtime") !== null) {
+			start_datetime.value = basic.formatDate(new Date(parseInt(params.get("sttime")) * 1000), "YYYY/MM/DD hh:mm");
+			end_datetime.value = basic.formatDate(new Date(parseInt(params.get("edtime")) * 1000), "YYYY/MM/DD hh:mm");
+			timezones.value = params.get("timezn");
+		} else {
+			let nd = new Date();
+			let od = new Date(new Date().setDate(new Date().getDate() - 2));
+			start_datetime.value = basic.formatDate(od, "YYYY/MM/DD hh:mm");
+			end_datetime.value = basic.formatDate(nd, "YYYY/MM/DD hh:mm");
+		}
 		let hidden = {
 			controls: true, format: 'YYYY/MM/DD HH:mm', headers: true,
-			hide: (ev) => { document.getElementById(ev.target.id).innerText = pickers[ev.target.id].getDate(true) }
+			hide: (ev) => { document.getElementById(ev.target.id).value = pickers[ev.target.id].getDate(true) }
 		};
-		pickers["start_datetime"] = new Picker(sttime, hidden);
-		pickers["end_datetime"] = new Picker(edtime, hidden);
+		pickers["start_datetime"] = new Picker(start_datetime, hidden);
+		pickers["end_datetime"] = new Picker(end_datetime, hidden);
 
 		// timezone
 		for (let i = -12; i < 14; i++) {
@@ -90,7 +95,12 @@ class EasyChangeset {
 			num = (i < 0 ? "-" : "+") + num;
 			winCont.select_add("timezones", num, i);
 		};
-		timezones.value = "9";
+		let timezn = params.get("timezn");
+		timezones.value = timezn == "" || timezn == null ? "9" : params.get("timezn");
+
+		// parameter clear(一度開いてブックマークを取るとやっかいなので)
+		let url = location.pathname + location.hash;
+		history.replaceState(null, null, url)
 	}
 
 	// チェンジセットを取得して表示する
@@ -99,6 +109,8 @@ class EasyChangeset {
 			this.busy = true;
 			view_btn.setAttribute("disabled", true);
 			StatusView.innerHTML = "now working..";
+			cmapper.clearMapper();
+			cmarker.clearMarker();
 			cchange.readChangeset().then(changesets => {
 				cmapper.makeMappers(changesets);
 				cmarker.writeMarkers(changesets);
@@ -118,7 +130,7 @@ class EasyChangeset {
 		cmapper.clearComment();
 		if (fmappers[0] !== undefined) {
 			document.getElementById("comments").innerHTML = "";
-			cmarker.writeMarkers(cchange.changesets); 
+			cmarker.writeMarkers(cchange.changesets);
 			let already = [];
 			fmappers.forEach(mapper => {
 				if (mapper !== undefined) {
@@ -150,6 +162,12 @@ class EasyChangeset {
 			line.classList[view ? "add" : "remove"]("selected");
 		});
 		this.filterMM(view ? cmapper.mappers : [undefined]);
+	}
+
+	// write Status in comments
+	writeComment(message) {
+		comments.innerHTML += message + "<br>";
+		comments.scrollTo(0, comments.scrollHeight - comments.clientHeight);
 	}
 }
 const easycs = new EasyChangeset();
