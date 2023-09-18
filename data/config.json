@@ -7,10 +7,11 @@
         "OSMapi": "https://api.openstreetmap.org/api/0.6/changesets",
         "DefaultZoom": 5.5,
         "ZoomSnap": 0.25,
-        "MinZoom": 10,
+        "MinZoom": 1,
         "LimitZoomLevel": 15.5,
         "MaxZoom": 21,
         "SearchZoom": 16,
+        "tile": "OSM_Standard",
         "ColorDarken": 0.5,
         "Circle": {
             "radius": 8,
@@ -55,25 +56,25 @@
                 "contrast: 150%",
                 "sepia: 0%"
             ],
-            "maxNativeZoom": 18
+            "maxZoom": 18
         },
         "OSM_Standard": {
             "name": "OpenStreetMap Standard",
             "copyright": "<a href=\"https://openstreetmap.org\">&copy OpenStreetMap contributors</a>",
             "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            "maxNativeZoom": 18
+            "maxZoom": 18
         },
         "GSI_pale": {
             "name": "地理院地図 淡色",
             "copyright": "<a href='https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html'>国土地理院 | &copy OpenStreetMap contributors</a>",
             "url": "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-            "maxNativeZoom": 18
+            "maxZoom": 18
         },
         "GSI_ort": {
             "name": "地理院地図 オルソ",
             "copyright": "<a href='https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html'>国土地理院 | &copy OpenStreetMap contributors</a>",
             "url": "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg",
-            "maxNativeZoom": 18
+            "maxZoom": 18
         }
     },
     "basemenu": {
@@ -81,15 +82,5 @@
     },
     "mapperlist": {
         "html": "<div style='margin: 4px'><button onclick='easycs.controlCheck(true)'>all</button> <button onclick='easycs.controlCheck(false)'>clear</button> <button onclick='basic.copyLink()'>link</button></div>"
-    },
-    "effect": {
-        "icon": {
-            "x": 0,
-            "y": 0
-        },
-        "text": {
-            "size": 12,
-            "view": true
-        }
     }
 }

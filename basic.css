@@ -1,17 +1,29 @@
-header {
+body {
     background-color: #222233;
-    color: #dddddd;
+    color: #cccccc;
+    font-size: 16px;
+    margin: 0px;
+}
+
+header span {
+    color: #ffffff;
     font-size: 18px;
     font-weight: bold;
     height: 30px;
     vertical-align: middle;
+    text-decoration: underline;
 }
 
-body {
-    background-color: #222233;
-    color: #dddddd;
-    font-size: 16px;
-    margin: 0px;
+a,
+.leaflet-container a {
+    color: #eeeeff;
+}
+
+a:link,
+a:visited,
+a:active,
+a:hover {
+    text-decoration: underline;
 }
 
 button {
@@ -19,16 +31,8 @@ button {
     font-weight: bold;
 }
 
-a:link,
-a:visited,
-a:active {
-    color: #dddddd;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-
+.button_right {
+    text-align: right;
 }
 
 .leaflet-popup-content {
@@ -79,19 +83,25 @@ span.date {
     width: 20%;
 }
 
-.leaflet-container .leaflet-control-attribution {
+.leaflet-control-attribution {
     color: #dddddd;
-    background-color: rgba(0, 0, 24, 0.6) !important
+    background-color: rgba(0, 0, 0, 0.4) !important
 }
 
-.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+.leaflet-container {
     color: #dddddd;
-    background-color: rgba(0, 0, 24, 0.6) !important
+    background-color: rgba(0, 0, 24, 0.7) !important
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    color: #dddddd;
+    background-color: rgba(0, 0, 24, 0.7) !important
 }
 
 .dtpicker {
     color: #dddddd;
-    background-color: rgba(0, 0, 24, 0.6);
+    background-color: rgba(0, 0, 24, 0.7);
     border: 1px solid;
     overflow: hidden;
     font-size: 14px;
