@@ -41,37 +41,21 @@ class EasyChangeset {
 
 		// set map layer
 		let def = Conf.default;
-		let maps = {}, tiles = {};
+		let maps = [], layer = {};
 		Object.keys(Conf.tile).forEach(key => {
-			let params = { "attribution": Conf.tile[key].copyright, "maxZoom": def.maxZoom };
-			if (Conf.tile[key].maxNativeZoom !== void 0) params.maxZoom = Conf.tile[key].maxZoom;
+			let params = { "attribution": Conf.tile[key].copyright, "maxZoom": Conf.tile[key].maxZoom };
 			if (Conf.tile[key].filter !== void 0) {             // color filter
 				params.filter = Conf.tile[key].filter;
-				tiles[key] = L.tileLayer.colorFilter(Conf.tile[key].url, params);
+				layer[Conf.tile[key].name] = L.tileLayer.colorFilter(Conf.tile[key].url, params);
 			} else {                                            // normal tile
-				tiles[key] = L.tileLayer(Conf.tile[key].url, params);
+				layer[Conf.tile[key].name] = L.tileLayer(Conf.tile[key].url, params);
 			}
-			maps[Conf.tile[key].name] = tiles[key];
+			maps.push(layer[Conf.tile[key].name]);
 		});
-		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, "maxZoom": def.MaxZoom, "minZoom": def.MinZoom, layers: [tiles[Conf.default.tile]] });
-		L.control.layers(maps, null, { position: 'bottomright' }).addTo(map);
+		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter,"zoom":def.Zoom, "maxZoom": def.MaxZoom, "minZoom": def.MinZoom });
+		L.control.layers(layer).addTo(map);
+		maps[0].addTo(map);
 		new L.Hash(map);
-		/*
-		let control;
-		let def = Conf.default;
-		let key = "OSM_Mono";
-		let options = { "attribution": Conf.tile[key].copyright, "maxNativeZoom": Conf.tile[key].maxNativeZoom, "filter": Conf.tile[key].filter };
-		let osm_std = L.tileLayer.colorFilter(Conf.tile[key].url, options);
-		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, zoom: def.DefaultZoom, zoomSnap: def.ZoomSnap, zoomDelta: def.ZoomSnap, maxZoom: def.MaxZoomLevel, layers: [osm_std] });
-		let layers = [];
-		Object.keys(Conf.tile).forEach((key) => {
-			let params = { "attribution": Conf.tile[key].copyright, "minZoom": 1, "maxZoom": Conf.tile[key].maxNativeZoom };
-			let layer = {};
-			layer[key] = L.tileLayer(Conf.tile[key].url, params);
-			layers.push(layer);
-		});
-		L.control.layers(layers).addTo(map);;
-		*/
 
 		// set datetime window
 		let control = L.control({ position: "topleft" });			// Add BaseMenu

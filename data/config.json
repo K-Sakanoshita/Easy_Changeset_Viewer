@@ -5,7 +5,7 @@
             138
         ],
         "OSMapi": "https://api.openstreetmap.org/api/0.6/changesets",
-        "DefaultZoom": 5.5,
+        "Zoom": 5.5,
         "ZoomSnap": 0.25,
         "MinZoom": 1,
         "LimitZoomLevel": 15.5,
