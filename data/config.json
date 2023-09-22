@@ -49,7 +49,7 @@
         "OSM_Mono": {
             "name": "OpenStreetMap Mono",
             "copyright": "<a href=\"https://openstreetmap.org\">&copy OpenStreetMap contributors</a>",
-            "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             "filter": [
                 "grayscale:90%",
                 "bright:80%",
@@ -61,7 +61,7 @@
         "OSM_Standard": {
             "name": "OpenStreetMap Standard",
             "copyright": "<a href=\"https://openstreetmap.org\">&copy OpenStreetMap contributors</a>",
-            "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             "maxZoom": 18
         },
         "GSI_pale": {
