@@ -80,7 +80,8 @@ div.date {
 }
 
 span.date {
-    width: 20%;
+    width: 3rem;
+    white-space: nowrap;
 }
 
 .leaflet-control-attribution {

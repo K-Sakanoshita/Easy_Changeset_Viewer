@@ -52,7 +52,7 @@ class EasyChangeset {
 			}
 			maps.push(layer[Conf.tile[key].name]);
 		});
-		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter,"zoom":def.Zoom, "maxZoom": def.MaxZoom, "minZoom": def.MinZoom });
+		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, "zoom": def.Zoom, "maxZoom": def.MaxZoom, "minZoom": def.MinZoom });
 		L.control.layers(layer).addTo(map);
 		maps[0].addTo(map);
 		new L.Hash(map);
@@ -118,6 +118,8 @@ class EasyChangeset {
 			this.busy = true;
 			view_btn.setAttribute("disabled", true);
 			StatusView.innerHTML = "now working..";
+			let ll = map.getCenter();
+			map.setView({ lat: ll.lat, lng: calcLng(ll.lng) });
 			cmapper.clearMapper();
 			cmarker.clearMarker();
 			cchange.readChangeset().then(changesets => {
@@ -129,6 +131,12 @@ class EasyChangeset {
 				StatusView.innerHTML = "";
 				this.busy = false;
 			});
+		}
+
+		function calcLng(lng) {
+			if (lng >= 180) return (lng % 360) - 360;
+			if (lng < -180) return (lng % 360) + 360;
+			return lng;
 		}
 	}
 

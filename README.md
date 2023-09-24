@@ -29,3 +29,8 @@ https://k-sakanoshita.github.io/Easy_Changeset_Viewer/
 * 色をダークへと変更
 * パーマネントリンク機能を追加（「link」ボタンを押すと取得できる）
 * API取得中の進捗をコメント欄に表示
+
+2023/09/24
+* タイルサーバのURLを修正（https://github.com/K-Sakanoshita/Easy_Changeset_Viewer/pull/4）
+* 地図座標の経度が-180〜180度の間に収まるよう値を超えた時の処理を追加
+* Start と End の改行を調整
