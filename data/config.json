@@ -56,25 +56,25 @@
                 "contrast: 150%",
                 "sepia: 0%"
             ],
-            "maxZoom": 18
+            "maxNativeZoom": 19
         },
         "OSM_Standard": {
             "name": "OpenStreetMap Standard",
             "copyright": "<a href=\"https://openstreetmap.org\">&copy OpenStreetMap contributors</a>",
             "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            "maxZoom": 18
+            "maxNativeZoom": 19
         },
         "GSI_pale": {
             "name": "地理院地図 淡色",
             "copyright": "<a href='https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html'>国土地理院 | &copy OpenStreetMap contributors</a>",
             "url": "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-            "maxZoom": 18
+            "maxNativeZoom": 18
         },
         "GSI_ort": {
             "name": "地理院地図 オルソ",
             "copyright": "<a href='https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html'>国土地理院 | &copy OpenStreetMap contributors</a>",
             "url": "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg",
-            "maxZoom": 18
+            "maxNativeZoom": 18
         }
     },
     "basemenu": {

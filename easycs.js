@@ -43,7 +43,7 @@ class EasyChangeset {
 		let def = Conf.default;
 		let maps = [], layer = {};
 		Object.keys(Conf.tile).forEach(key => {
-			let params = { "attribution": Conf.tile[key].copyright, "maxZoom": Conf.tile[key].maxZoom };
+			let params = { "attribution": Conf.tile[key].copyright, maxZoom: def.MaxZoom, "maxNativeZoom": Conf.tile[key].maxNativeZoom };
 			if (Conf.tile[key].filter !== void 0) {             // color filter
 				params.filter = Conf.tile[key].filter;
 				layer[Conf.tile[key].name] = L.tileLayer.colorFilter(Conf.tile[key].url, params);
@@ -52,7 +52,7 @@ class EasyChangeset {
 			}
 			maps.push(layer[Conf.tile[key].name]);
 		});
-		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, "zoom": def.Zoom, "maxZoom": def.MaxZoom, "minZoom": def.MinZoom });
+		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, "zoom": def.Zoom, "minZoom": def.MinZoom });
 		L.control.layers(layer).addTo(map);
 		maps[0].addTo(map);
 		new L.Hash(map);

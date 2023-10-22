@@ -34,3 +34,8 @@ https://k-sakanoshita.github.io/Easy_Changeset_Viewer/
 * タイルサーバのURLを修正（https://github.com/K-Sakanoshita/Easy_Changeset_Viewer/pull/4）
 * 地図座標の経度が-180〜180度の間に収まるよう値を超えた時の処理を追加
 * Start と End の改行を調整
+
+2023/10/22
+* XSS脆弱性の指摘を頂いたので修正(JavaScript込みのusername、commentを無害化)
+* 西経で経度計算を間違える処理を修正(画面内外の判定ロジックのミス)
+* ズームレベル19以上で地図が表示されなくなるバグの修正
