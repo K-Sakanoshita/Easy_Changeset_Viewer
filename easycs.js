@@ -52,7 +52,10 @@ class EasyChangeset {
 			}
 			maps.push(layer[Conf.tile[key].name]);
 		});
-		map = L.map('mapid', { zoomControl: false, center: def.DefaultCenter, "zoom": def.Zoom, "minZoom": def.MinZoom });
+		map = L.map('mapid', {
+			"zoomControl": false, "center": def.DefaultCenter, "zoom": def.Zoom, "minZoom": def.MinZoom,
+			"zoomSnap": def.ZoomSnap, "zoomDelta": def.ZoomSnap
+		});
 		L.control.layers(layer).addTo(map);
 		maps[0].addTo(map);
 		new L.Hash(map);

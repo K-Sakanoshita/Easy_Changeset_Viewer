@@ -8,9 +8,7 @@
         "Zoom": 5.5,
         "ZoomSnap": 0.25,
         "MinZoom": 1,
-        "LimitZoomLevel": 15.5,
         "MaxZoom": 21,
-        "SearchZoom": 16,
         "tile": "OSM_Standard",
         "ColorDarken": 0.5,
         "Circle": {
@@ -28,21 +26,6 @@
             "size": 12,
             "anchor": "start",
             "font": "Helvetica"
-        },
-        "Paper": {
-            "x": 210,
-            "y": 297,
-            "dpi": 150
-        },
-        "Icon": {
-            "x": 20,
-            "y": 20,
-            "scale": 1.66
-        },
-        "Text": {
-            "view": true,
-            "size": 12,
-            "color": "black"
         }
     },
     "tile": {
