@@ -253,8 +253,8 @@ class EasyChangeset {
                 }
             }
         });
-        mMap.setView(map.getCenter());
-        mMap.setZoom(map.getZoom());
+        const center = map.getCenter();
+        mMap.setView(center, map.getZoom());
         polygons.addTo(mMap);
         mMap.invalidateSize();
         mMapid.style.display = 'block';
