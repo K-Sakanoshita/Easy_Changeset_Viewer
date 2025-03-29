@@ -27,6 +27,7 @@ a:hover {
 }
 
 button {
+    margin: 10px;
     font-size: 120%;
     font-weight: bold;
 }
@@ -67,6 +68,14 @@ button {
 div.mapid {
     width: 100vw;
     height: calc(75vh - 30px);
+}
+
+div.mMapid {
+    width: 100vw;
+    height: calc(75vh - 30px);
+    z-index: 1000;
+    position: absolute;
+    display: none;
 }
 
 div.center {

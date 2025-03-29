@@ -1,9 +1,10 @@
 <html lang="ja">
 
 <head>
-    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1, minimum-scale=1">
     <meta charset="utf-8" />
-    <title>Easy Changeset Viewer(ver 2023/09/24)</title>
+    <title>Easy Changeset Viewer(ver 2025/03/29)</title>
 </head>
 <link rel="shortcut icon" href="favicon.ico" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -17,7 +18,9 @@
 <script src="./lib/changeset.js"></script>
 <script src="./lib/marker.js"></script>
 <script src="./lib/mapper.js"></script>
+<script src="./lib/osmtogeojson.js"></script>
 <script src="./lib/leaflet-tilelayer-colorfilter.min.js"></script>
+<script src="./lib/overpass.js"></script>
 <script src="./easycs.js"></script>
 
 <body>
@@ -26,6 +29,7 @@
         <span class="author"><a href="https://www.openstreetmap.org/user/K_Sakanoshita">by K.Sakanoshita</a></span>
     </header>
     <div id="mapid" class="mapid"></div>
+    <div id="mMapid" class="mMapid"></div>
     <div class="details">
         <div id="mappers"></div>
         <div id="comments"></div>
