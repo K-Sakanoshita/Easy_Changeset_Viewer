@@ -27,7 +27,8 @@ a:hover {
 }
 
 button {
-    margin: 10px;
+    margin: 6px;
+    padding: 4px;
     font-size: 120%;
     font-weight: bold;
 }

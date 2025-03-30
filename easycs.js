@@ -11,23 +11,22 @@ const params = new URLSearchParams(window.location.search);
 
 // initialize leaflet
 window.onload = function () {
-    console.log("Welcome to Easy Changeset Viewer.");
-
-    var url = "./data/config.json";
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.send();
+    console.log("Welcome to Easy Changeset Viewer.")
+    var url = "./data/config.json"
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', url)
+    xhr.send()
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-            let arg = JSON.parse(xhr.responseText);
+            let arg = JSON.parse(xhr.responseText)
             Object.keys(arg).forEach(key1 => {
                 Conf[key1] = {};
                 Object.keys(arg[key1]).forEach((key2) => Conf[key1][key2] = arg[key1][key2]);
-            });
-            easycs.init();
-        };
-    };
-};
+            })
+            easycs.init()
+        }
+    }
+}
 
 class EasyChangeset {
     constructor() {
@@ -160,17 +159,30 @@ class EasyChangeset {
     }
 
     // チェンジセットの詳細を別地図上で表示する
-    viewDetail(changesetId) {
+    viewDetail(params) {
         if (!this.busy) {
             this.busy = true;
+            let buttons = document.getElementById("buttons");
+            for (let a of buttons.children) { a.setAttribute("disabled", true); }
+            StatusView.innerHTML = "now working..";
             const fetcher = new OSMChangesetPolygonFetcher();
-            fetcher.getFullDataFromChangeset(changesetId)
-                .then(data => {
-                    easycs.writeGeoJSON(data);
-                    mMap.invalidateSize();
-                    this.busy = false;
-                })
-                .catch(error => console.error('エラー:', error));
+            if (params.changesetId !== undefined) {
+                fetcher.getFullDataFromChangeset(params.changesetId)
+                    .then(data => {
+                        for (let a of buttons.children) { a.removeAttribute("disabled"); }
+                        easycs.writeGeoJSON(data);
+                        mMap.invalidateSize();
+                        this.busy = false;
+                    })
+            } else if (params.username !== undefined) {
+                fetcher.getFullDataFromUserName(params)
+                    .then(data => {
+                        for (let a of buttons.children) { a.removeAttribute("disabled"); }
+                        easycs.writeGeoJSON(data);
+                        mMap.invalidateSize();
+                        this.busy = false;
+                    })
+            }
         }
     }
 
@@ -239,7 +251,7 @@ class EasyChangeset {
             style: {
                 "fillColor": "#FFCC00",
                 "color": "#0033FF",
-                "weight": 2,
+                "weight": 3,
                 "fillOpacity": 0.3
             },
             pointToLayer: function (feature, latlng) {
@@ -248,8 +260,18 @@ class EasyChangeset {
                 });
             },
             onEachFeature: function (feature, layer) {
-                if (feature.properties && feature.properties.name) {
-                    layer.bindPopup(feature.properties.name);
+                if (feature.properties) {
+                    let result = '', obj = feature.properties;
+                    for (let key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            if (key == "id") {
+                                result += `${key}:<a href="https://osm.org/${obj[key]}" target="_blank">${obj[key]}</a><br>`;
+                            } else {
+                                result += `${key}:${obj[key]}<br>`;
+                            }
+                        }
+                    }
+                    layer.bindPopup(result);
                 }
             }
         });
