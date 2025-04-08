@@ -173,6 +173,7 @@ class EasyChangeset {
                         easycs.writeGeoJSON(data);
                         mMap.invalidateSize();
                         this.busy = false;
+                        StatusView.innerHTML = "";
                     })
             } else if (params.username !== undefined) {
                 fetcher.getFullDataFromUserName(params)
@@ -181,6 +182,7 @@ class EasyChangeset {
                         easycs.writeGeoJSON(data);
                         mMap.invalidateSize();
                         this.busy = false;
+                        StatusView.innerHTML = "";
                     })
             }
         }
