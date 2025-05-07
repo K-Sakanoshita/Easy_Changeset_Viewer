@@ -120,10 +120,10 @@ class EasyChangeset {
         for (let i = -12; i < 14; i++) {
             let num = ("0" + Math.abs(i) + ":00").slice(-5);
             num = (i < 0 ? "-" : "+") + num;
-            winCont.select_add("timezones", num, i);
+            winCont.select_add("timezones", num, num);
         };
         let timezn = params.get("timezn");
-        timezones.value = timezn == "" || timezn == null ? "9" : params.get("timezn");
+        timezones.value = timezn == "" || timezn == null ? "+09:00" : params.get("timezn");
 
         // parameter clear(一度開いてブックマークを取るとやっかいなので)
         let url = location.pathname + location.hash;
