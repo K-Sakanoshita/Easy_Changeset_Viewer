@@ -145,6 +145,9 @@ class EasyChangeset {
                 cmarker.writeMarkers(changesets);
                 cmapper.writeMappers();
                 map.scrollWheelZoom.enable(); map.dragging.enable();
+            }).catch(error => {
+                this.writeComment(error.message);
+            }).finally(() => {
                 view_btn.removeAttribute("disabled");
                 StatusView.innerHTML = "";
                 this.busy = false;
@@ -166,24 +169,23 @@ class EasyChangeset {
             for (let a of buttons.children) { a.setAttribute("disabled", true); }
             StatusView.innerHTML = "now working..";
             const fetcher = new OSMChangesetPolygonFetcher();
+            let request;
             if (params.changesetId !== undefined) {
-                fetcher.getFullDataFromChangeset(params.changesetId)
-                    .then(data => {
-                        for (let a of buttons.children) { a.removeAttribute("disabled"); }
-                        easycs.writeGeoJSON(data);
-                        mMap.invalidateSize();
-                        this.busy = false;
-                        StatusView.innerHTML = "";
-                    })
+                request = fetcher.getFullDataFromChangeset(params.changesetId);
             } else if (params.username !== undefined) {
-                fetcher.getFullDataFromUserName(params)
-                    .then(data => {
-                        for (let a of buttons.children) { a.removeAttribute("disabled"); }
-                        easycs.writeGeoJSON(data);
-                        mMap.invalidateSize();
-                        this.busy = false;
-                        StatusView.innerHTML = "";
-                    })
+                request = fetcher.getFullDataFromUserName(params);
+            }
+            if (request !== undefined) {
+                request.then(data => {
+                    easycs.writeGeoJSON(data);
+                    mMap.invalidateSize();
+                }).catch(error => {
+                    this.writeComment(error.message);
+                }).finally(() => {
+                    for (let a of buttons.children) { a.removeAttribute("disabled"); }
+                    this.busy = false;
+                    StatusView.innerHTML = "";
+                });
             }
         }
     }
