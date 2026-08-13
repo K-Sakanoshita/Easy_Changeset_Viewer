@@ -299,7 +299,11 @@ class EasyChangeset {
                     easycs.writeGeoJSON(data);
                     mMap.invalidateSize();
                 }).catch(error => {
-                    this.writeComment(error.message);
+                    const message = error?.message || String(error);
+                    if (/(timeout|timed out|time out|504|524)/i.test(`${error?.name || ""} ${message}`)) {
+                        alert("詳細データの取得がタイムアウトしました。\n時間を短くして、もう一度お試しください。");
+                    }
+                    this.writeComment(message);
                 }).finally(() => {
                     for (let button of buttons.querySelectorAll("button")) { button.removeAttribute("disabled"); }
                     if (spinner !== null) spinner.hidden = true;
