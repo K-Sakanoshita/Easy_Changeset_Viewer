@@ -30,8 +30,14 @@
     </header>
     <div id="mapid" class="mapid"></div>
     <div id="mMapid" class="mMapid"></div>
-    <div class="details">
+    <div id="details" class="details">
+        <button id="detailsResizeHandle" class="details-resize-handle" type="button" role="separator"
+            aria-label="下部パネルの高さを変更" aria-orientation="horizontal" aria-valuemin="0"
+            aria-valuemax="100" aria-valuenow="25" title="上下にドラッグして高さを変更"></button>
         <div id="mappers"></div>
+        <button id="mappersResizeHandle" class="mappers-resize-handle" type="button" role="separator"
+            aria-label="マッパー一覧の幅を変更" aria-orientation="vertical" aria-valuemin="0"
+            aria-valuemax="100" aria-valuenow="0" title="左右にドラッグして幅を変更"></button>
         <div id="comments"></div>
     </div>
 </body>

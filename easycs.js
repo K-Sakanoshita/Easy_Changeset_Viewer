@@ -37,6 +37,8 @@ class EasyChangeset {
         // set window size
         let height = window.innerHeight;
         document.documentElement.style.setProperty('--vh', height / 100 + 'px');
+        this.initDetailsResize();
+        this.initMappersResize();
         const rect = mapid.getBoundingClientRect();
         mMapid.style.top = rect.top + window.scrollY + 'px';
 
@@ -130,6 +132,121 @@ class EasyChangeset {
         history.replaceState(null, null, url)
     }
 
+    // 画面下部の一覧・コメント欄を上下ドラッグでリサイズする
+    initDetailsResize() {
+        const details = document.getElementById("details");
+        const handle = document.getElementById("detailsResizeHandle");
+        const header = document.querySelector("header");
+        const minDetailsHeight = 96;
+        const minMapHeight = 120;
+        let activePointerId = null;
+
+        const updateAriaRange = () => {
+            const headerHeight = header.getBoundingClientRect().height;
+            handle.setAttribute("aria-valuemin", Math.round(minDetailsHeight / window.innerHeight * 100));
+            handle.setAttribute("aria-valuemax", Math.round((window.innerHeight - headerHeight - minMapHeight) / window.innerHeight * 100));
+        };
+        updateAriaRange();
+
+        const resize = (height) => {
+            const headerHeight = header.getBoundingClientRect().height;
+            const maxDetailsHeight = Math.max(minDetailsHeight, window.innerHeight - headerHeight - minMapHeight);
+            const nextHeight = Math.min(maxDetailsHeight, Math.max(minDetailsHeight, height));
+            document.body.style.setProperty("--details-height", nextHeight + "px");
+            const percent = Math.round(nextHeight / window.innerHeight * 100);
+            handle.setAttribute("aria-valuenow", percent);
+            map.invalidateSize({ pan: false });
+            if (mMap !== undefined) mMap.invalidateSize({ pan: false });
+        };
+
+        handle.addEventListener("pointerdown", (event) => {
+            if (event.button !== 0) return;
+            activePointerId = event.pointerId;
+            handle.classList.add("is-dragging");
+            document.body.classList.add("is-resizing-details");
+            event.preventDefault();
+        });
+        window.addEventListener("pointermove", (event) => {
+            if (event.pointerId !== activePointerId) return;
+            resize(window.innerHeight - event.clientY);
+        });
+        const stopResize = (event) => {
+            if (event.pointerId !== activePointerId) return;
+            activePointerId = null;
+            handle.classList.remove("is-dragging");
+            document.body.classList.remove("is-resizing-details");
+        };
+        window.addEventListener("pointerup", stopResize);
+        window.addEventListener("pointercancel", stopResize);
+        handle.addEventListener("keydown", (event) => {
+            if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+            const step = event.shiftKey ? 40 : 10;
+            const direction = event.key === "ArrowUp" ? 1 : -1;
+            resize(details.getBoundingClientRect().height + step * direction);
+            event.preventDefault();
+        });
+        window.addEventListener("resize", () => {
+            updateAriaRange();
+            resize(details.getBoundingClientRect().height);
+        });
+    }
+
+    // マッパー一覧の右端を左右ドラッグでリサイズする
+    initMappersResize() {
+        const details = document.getElementById("details");
+        const mappers = document.getElementById("mappers");
+        const handle = document.getElementById("mappersResizeHandle");
+        const minMappersWidth = 10;
+        const minCommentsWidth = 120;
+        let activePointerId = null;
+
+        const updateAriaRange = () => {
+            const maxWidth = Math.max(minMappersWidth, details.clientWidth - handle.offsetWidth - minCommentsWidth);
+            handle.setAttribute("aria-valuemin", minMappersWidth);
+            handle.setAttribute("aria-valuemax", maxWidth);
+            handle.setAttribute("aria-valuenow", Math.round(mappers.getBoundingClientRect().width));
+        };
+
+        const resize = (width) => {
+            const maxWidth = Math.max(minMappersWidth, details.clientWidth - handle.offsetWidth - minCommentsWidth);
+            const nextWidth = Math.min(maxWidth, Math.max(minMappersWidth, width));
+            mappers.style.width = nextWidth + "px";
+            handle.setAttribute("aria-valuenow", Math.round(nextWidth));
+        };
+        updateAriaRange();
+
+        handle.addEventListener("pointerdown", (event) => {
+            if (event.button !== 0) return;
+            activePointerId = event.pointerId;
+            handle.classList.add("is-dragging");
+            document.body.classList.add("is-resizing-mappers");
+            event.preventDefault();
+        });
+        window.addEventListener("pointermove", (event) => {
+            if (event.pointerId !== activePointerId) return;
+            resize(event.clientX - mappers.getBoundingClientRect().left);
+        });
+        const stopResize = (event) => {
+            if (event.pointerId !== activePointerId) return;
+            activePointerId = null;
+            handle.classList.remove("is-dragging");
+            document.body.classList.remove("is-resizing-mappers");
+        };
+        window.addEventListener("pointerup", stopResize);
+        window.addEventListener("pointercancel", stopResize);
+        handle.addEventListener("keydown", (event) => {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+            const step = event.shiftKey ? 40 : 10;
+            const direction = event.key === "ArrowRight" ? 1 : -1;
+            resize(mappers.getBoundingClientRect().width + step * direction);
+            event.preventDefault();
+        });
+        window.addEventListener("resize", () => {
+            updateAriaRange();
+            if (mappers.style.width !== "") resize(mappers.getBoundingClientRect().width);
+        });
+    }
+
     // チェンジセットを取得して表示する
     viewChangeset() {
         if (!this.busy) {
@@ -166,7 +283,9 @@ class EasyChangeset {
         if (!this.busy) {
             this.busy = true;
             let buttons = document.getElementById("buttons");
-            for (let a of buttons.children) { a.setAttribute("disabled", true); }
+            let spinner = document.getElementById("detailSpinner");
+            for (let button of buttons.querySelectorAll("button")) { button.setAttribute("disabled", true); }
+            if (spinner !== null) spinner.hidden = false;
             StatusView.innerHTML = "now working..";
             const fetcher = new OSMChangesetPolygonFetcher();
             let request;
@@ -182,10 +301,16 @@ class EasyChangeset {
                 }).catch(error => {
                     this.writeComment(error.message);
                 }).finally(() => {
-                    for (let a of buttons.children) { a.removeAttribute("disabled"); }
+                    for (let button of buttons.querySelectorAll("button")) { button.removeAttribute("disabled"); }
+                    if (spinner !== null) spinner.hidden = true;
                     this.busy = false;
                     StatusView.innerHTML = "";
                 });
+            } else {
+                for (let button of buttons.querySelectorAll("button")) { button.removeAttribute("disabled"); }
+                if (spinner !== null) spinner.hidden = true;
+                this.busy = false;
+                StatusView.innerHTML = "";
             }
         }
     }

@@ -1,4 +1,5 @@
 body {
+    --details-height: 25vh;
     background-color: #222233;
     color: #cccccc;
     font-size: 16px;
@@ -36,6 +37,33 @@ button {
     text-align: right;
 }
 
+.detail-spinner {
+    animation: detail-spinner 0.7s linear infinite;
+    border: 2px solid rgba(220, 220, 255, 0.35);
+    border-radius: 50%;
+    border-top-color: #eeeeff;
+    display: block;
+    height: 12px;
+    margin: 8px auto 0;
+    width: 12px;
+}
+
+.detail-spinner[hidden] {
+    display: none;
+}
+
+@keyframes detail-spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .detail-spinner {
+        animation-duration: 1.5s;
+    }
+}
+
 .leaflet-popup-content {
     font-size: 14px !important;
 }
@@ -57,25 +85,101 @@ button {
     max-width: 50vw;
 }
 
+@media (max-width: 700px) {
+    .info {
+        box-sizing: border-box;
+        max-width: calc(100vw - 20px);
+    }
+
+    .info .date input {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
 .details {
     display: flex;
     flex-shrink: 0;
     font-size: 14px;
-    height: 25vh;
+    height: var(--details-height);
     opacity: 1;
+    position: relative;
+    z-index: 1001;
 }
 
 div.mapid {
     width: 100vw;
-    height: calc(75vh - 30px);
+    height: calc(100vh - 30px - var(--details-height));
 }
 
 div.mMapid {
     width: 100vw;
-    height: calc(75vh - 30px);
+    height: calc(100vh - 30px - var(--details-height));
     z-index: 1000;
     position: absolute;
     display: none;
+}
+
+.details-resize-handle {
+    background: #eeeeff;
+    border: 1px solid #777799;
+    border-radius: 999px;
+    cursor: ns-resize;
+    height: 10px;
+    left: 50%;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    touch-action: none;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    z-index: 1002;
+}
+
+.details-resize-handle:hover,
+.details-resize-handle:focus-visible,
+.details-resize-handle.is-dragging {
+    background: #ffffff;
+    outline: 2px solid #6666aa;
+    outline-offset: -2px;
+}
+
+.mappers-resize-handle {
+    align-self: center;
+    background: #eeeeff;
+    border: 1px solid #777799;
+    border-radius: 999px;
+    cursor: ew-resize;
+    flex-shrink: 0;
+    height: 64px;
+    margin: 0 -5px;
+    padding: 0;
+    position: relative;
+    touch-action: none;
+    width: 10px;
+    z-index: 1;
+}
+
+.mappers-resize-handle:hover,
+.mappers-resize-handle:focus-visible,
+.mappers-resize-handle.is-dragging {
+    background: #ffffff;
+    outline: 2px solid #6666aa;
+    outline-offset: -2px;
+}
+
+body.is-resizing-details,
+body.is-resizing-mappers {
+    user-select: none;
+}
+
+body.is-resizing-details {
+    cursor: ns-resize;
+}
+
+body.is-resizing-mappers {
+    cursor: ew-resize;
 }
 
 div.center {
@@ -121,6 +225,7 @@ span.date {
 }
 
 #mappers {
+    box-sizing: border-box;
     color: #dddddd;
     background-color: #222233;
     flex-wrap: wrap;
