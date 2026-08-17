@@ -30,14 +30,20 @@
     </header>
     <div id="mapid" class="mapid"></div>
     <div id="mMapid" class="mMapid"></div>
+    <div id="detailLoading" class="detail-loading-overlay" role="status" aria-live="polite" hidden>
+        <div class="detail-loading-panel">
+            <span class="detail-spinner" aria-hidden="true"></span>
+            <span>Loading changeset details...</span>
+        </div>
+    </div>
     <div id="details" class="details">
         <button id="detailsResizeHandle" class="details-resize-handle" type="button" role="separator"
-            aria-label="下部パネルの高さを変更" aria-orientation="horizontal" aria-valuemin="0"
-            aria-valuemax="100" aria-valuenow="25" title="上下にドラッグして高さを変更"></button>
+            aria-label="Resize lower panel" aria-orientation="horizontal" aria-valuemin="0"
+            aria-valuemax="100" aria-valuenow="25" title="Drag vertically to resize"></button>
         <div id="mappers"></div>
         <button id="mappersResizeHandle" class="mappers-resize-handle" type="button" role="separator"
-            aria-label="マッパー一覧の幅を変更" aria-orientation="vertical" aria-valuemin="0"
-            aria-valuemax="100" aria-valuenow="0" title="左右にドラッグして幅を変更"></button>
+            aria-label="Resize mapper list" aria-orientation="vertical" aria-valuemin="0"
+            aria-valuemax="100" aria-valuenow="0" title="Drag horizontally to resize"></button>
         <div id="comments"></div>
     </div>
 </body>

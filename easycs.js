@@ -41,6 +41,8 @@ class EasyChangeset {
         this.initMappersResize();
         const rect = mapid.getBoundingClientRect();
         mMapid.style.top = rect.top + window.scrollY + 'px';
+        const loadingOverlay = document.getElementById("detailLoading");
+        if (loadingOverlay !== null) loadingOverlay.style.top = rect.top + window.scrollY + 'px';
 
         // set map layer
         let def = Conf.default;
@@ -127,9 +129,36 @@ class EasyChangeset {
         let timezn = params.get("timezn");
         timezones.value = timezn == "" || timezn == null ? "+09:00" : params.get("timezn");
 
-        // parameter clear(一度開いてブックマークを取るとやっかいなので)
-        let url = location.pathname + location.hash;
-        history.replaceState(null, null, url)
+        this.runUrlParameters();
+    }
+
+    // 外部連携用URLパラメータを実行する
+    runUrlParameters() {
+        const changesetId = params.get("changeset");
+        if (changesetId !== null) {
+            if (/^[1-9]\d*$/.test(changesetId)) {
+                this.viewDetail({ changesetId: changesetId, fitBounds: true });
+            } else {
+                this.writeComment("The changeset parameter must be a positive integer.");
+            }
+            return;
+        }
+
+        if (params.get("autorun") === "1") {
+            this.viewChangeset();
+        }
+    }
+
+    // 表示中のチェンジセット詳細とURLを同期する
+    syncChangesetUrl(changesetId) {
+        if (changesetId === null || changesetId === undefined) {
+            params.delete("changeset");
+        } else {
+            params.set("changeset", String(changesetId));
+        }
+        const query = params.toString();
+        const url = location.pathname + (query === "" ? "" : "?" + query) + location.hash;
+        history.replaceState(history.state, "", url);
     }
 
     // 画面下部の一覧・コメント欄を上下ドラッグでリサイズする
@@ -282,10 +311,17 @@ class EasyChangeset {
     viewDetail(params) {
         if (!this.busy) {
             this.busy = true;
-            let buttons = document.getElementById("buttons");
+            let buttons = document.querySelectorAll("#buttons button");
             let spinner = document.getElementById("detailSpinner");
-            for (let button of buttons.querySelectorAll("button")) { button.setAttribute("disabled", true); }
+            const loadingOverlay = document.getElementById("detailLoading");
+            const directChangeset = buttons.length === 0 && params.changesetId !== undefined;
+            for (let button of buttons) { button.setAttribute("disabled", true); }
             if (spinner !== null) spinner.hidden = false;
+            if (directChangeset) {
+                mMapid.style.display = 'block';
+                mMap.invalidateSize();
+                if (loadingOverlay !== null) loadingOverlay.hidden = false;
+            }
             StatusView.innerHTML = "now working..";
             const fetcher = new OSMChangesetPolygonFetcher();
             let request;
@@ -296,23 +332,27 @@ class EasyChangeset {
             }
             if (request !== undefined) {
                 request.then(data => {
-                    easycs.writeGeoJSON(data);
+                    easycs.writeGeoJSON(data, params.fitBounds === true);
+                    this.syncChangesetUrl(params.changesetId);
                     mMap.invalidateSize();
                 }).catch(error => {
                     const message = error?.message || String(error);
                     if (/(timeout|timed out|time out|504|524)/i.test(`${error?.name || ""} ${message}`)) {
-                        alert("詳細データの取得がタイムアウトしました。\n時間を短くして、もう一度お試しください。");
+                        alert("The detail request timed out.\nPlease try again later or use a shorter time range.");
                     }
                     this.writeComment(message);
+                    if (directChangeset) mMapid.style.display = 'none';
                 }).finally(() => {
-                    for (let button of buttons.querySelectorAll("button")) { button.removeAttribute("disabled"); }
+                    for (let button of buttons) { button.removeAttribute("disabled"); }
                     if (spinner !== null) spinner.hidden = true;
+                    if (directChangeset && loadingOverlay !== null) loadingOverlay.hidden = true;
                     this.busy = false;
                     StatusView.innerHTML = "";
                 });
             } else {
-                for (let button of buttons.querySelectorAll("button")) { button.removeAttribute("disabled"); }
+                for (let button of buttons) { button.removeAttribute("disabled"); }
                 if (spinner !== null) spinner.hidden = true;
+                if (directChangeset && loadingOverlay !== null) loadingOverlay.hidden = true;
                 this.busy = false;
                 StatusView.innerHTML = "";
             }
@@ -329,6 +369,7 @@ class EasyChangeset {
             }
         });
         mMapid.style.display = 'none';
+        this.syncChangesetUrl(null);
     }
 
     // 指定したmappersリストをフィルタ表示
@@ -379,7 +420,7 @@ class EasyChangeset {
     }
 
     // 指定したgeoJsonを地図上に描画
-    writeGeoJSON(geojsonData) {
+    writeGeoJSON(geojsonData, fitBounds = false) {
         let polygons = L.geoJSON(geojsonData, {
             style: {
                 "fillColor": "#FFCC00",
@@ -408,11 +449,19 @@ class EasyChangeset {
                 }
             }
         });
-        const center = map.getCenter();
-        mMap.setView(center, map.getZoom());
+        if (!fitBounds) {
+            const center = map.getCenter();
+            mMap.setView(center, map.getZoom());
+        }
         polygons.addTo(mMap);
-        mMap.invalidateSize();
         mMapid.style.display = 'block';
+        mMap.invalidateSize();
+        if (fitBounds && polygons.getBounds().isValid()) {
+            mMap.fitBounds(polygons.getBounds(), {
+                padding: [20, 20],
+                maxZoom: Math.min(18, mMap.getMaxZoom())
+            });
+        }
     }
 }
 const easycs = new EasyChangeset();

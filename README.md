@@ -2,6 +2,21 @@
 * OpenStreetMapの編集履歴をWeb上で簡単に見るアプリ
 * https://k-sakanoshita.github.io/Easy_Changeset_Viewer/
 
+## 外部連携用URLパラメータ
+
+* `autorun=1`: ページを開いた後、「view」を押さずにチェンジセット一覧を自動取得します。
+* `changeset=チェンジセット番号`: 指定したチェンジセットの詳細を直接表示します。
+  * 詳細データの取得中はローディング表示を出します。
+  * 取得後は対象範囲に合わせて緯度・経度とズームレベルを自動調整します。
+  * 詳細表示中はURLの`changeset`と画面状態を同期し、「Close」でURLから削除します。
+* `changeset`と`autorun=1`を同時に指定した場合は、`changeset`を優先します。
+* URLパラメータはページ初期化後も保持されます。
+
+使用例:
+
+* `https://k-sakanoshita.github.io/Easy_Changeset_Viewer/?autorun=1`
+* `https://k-sakanoshita.github.io/Easy_Changeset_Viewer/?changeset=123456789`
+
 # Change Log
 2021/05/02
 * 任意の期間と場所のチェンジセットを取得して地図上に表示する機能のみ作成
@@ -65,3 +80,7 @@
 2026/08/14
 * Detail処理中にスピナーを表示するよう修正
 * ドラッグハンドルを追加
+
+2026/08/17
+* 外部連携用の`autorun`・`changeset`パラメータを追加
+* チェンジセット詳細の自動位置調整、URL同期、ローディング表示に対応
