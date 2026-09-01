@@ -91,9 +91,12 @@ button {
         max-width: calc(100vw - 20px);
     }
 
-    .info .date input {
-        flex: 1;
-        min-width: 0;
+    .datetime-menu {
+        width: calc(100vw - 20px);
+    }
+
+    .datetime-field {
+        padding-right: 48px;
     }
 }
 
@@ -215,19 +218,69 @@ body.is-resizing-mappers {
     cursor: ew-resize;
 }
 
-div.center {
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
+.datetime-menu {
+    box-sizing: border-box;
+    padding: 8px;
 }
 
-div.date {
-    display: flex;
+.datetime-range {
+    display: grid;
+    gap: 6px;
 }
 
-span.date {
-    width: 3rem;
-    white-space: nowrap;
+.datetime-field,
+.timezone-field {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    text-align: left;
+}
+
+.datetime-field span,
+.timezone-field span {
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+}
+
+.timezone-field span {
+    line-height: 1.05;
+}
+
+.datetime-field input,
+.timezone-field select {
+    background-color: #18182b;
+    border: 1px solid #9999bb;
+    border-radius: 4px;
+    box-sizing: border-box;
+    color: #ffffff;
+    color-scheme: dark;
+    font: inherit;
+    min-height: 34px;
+    min-width: 0;
+    padding: 4px 6px;
+    width: 100%;
+}
+
+.datetime-field input:focus-visible,
+.timezone-field select:focus-visible {
+    border-color: #ffffff;
+    outline: 2px solid #7777cc;
+    outline-offset: 1px;
+}
+
+.datetime-actions {
+    align-items: center;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.datetime-actions #view_btn {
+    margin: 0;
+    min-height: 34px;
+    padding: 4px 12px;
 }
 
 .leaflet-control-attribution {
@@ -244,17 +297,6 @@ span.date {
 .leaflet-popup-tip {
     color: #dddddd;
     background-color: rgba(0, 0, 24, 0.7) !important
-}
-
-.dtpicker {
-    color: #dddddd;
-    background-color: rgba(0, 0, 24, 0.7);
-    border: 1px solid;
-    overflow: hidden;
-    font-size: 14px;
-    font-weight: normal;
-    padding: 2px;
-    margin: 2px 2px 4px 2px;
 }
 
 #mappers {

@@ -4,7 +4,6 @@
 // Global Variable
 var map, mMap;				// leaflet map object
 var Conf = {};			// Config Praams
-var pickers = [];
 var basic = new Basic();
 const LANG = (window.navigator.userLanguage || window.navigator.language || window.navigator.browserLanguage).substr(0, 2) == "ja" ? "ja" : "en";
 const params = new URLSearchParams(window.location.search);
@@ -28,6 +27,23 @@ window.onload = function () {
     }
 }
 
+// classic scripts で共有するDOM参照を、各要素の生成後に init() で代入する
+var mapid, mMapid, basemenu, view_btn, start_datetime, end_datetime, timezones, StatusView, comments;
+
+/**
+ * Helper that retrieves a required element by id.
+ * Throws a clear error if the element is not found.
+ * @param {string} id - element id
+ * @returns {HTMLElement}
+ */
+function getRequiredElement(id) {
+    const el = document.getElementById(id);
+    if (!el) {
+        throw new Error(`Required element with id '${id}' not found`);
+    }
+    return el;
+}
+
 class EasyChangeset {
     constructor() {
         this.busy = false;
@@ -39,6 +55,10 @@ class EasyChangeset {
         document.documentElement.style.setProperty('--vh', height / 100 + 'px');
         this.initDetailsResize();
         this.initMappersResize();
+        // Initialize static DOM elements using required element lookup
+        mapid = getRequiredElement('mapid');
+        mMapid = getRequiredElement('mMapid');
+        comments = getRequiredElement('comments');
         const rect = mapid.getBoundingClientRect();
         mMapid.style.top = rect.top + window.scrollY + 'px';
         const loadingOverlay = document.getElementById("detailLoading");
@@ -47,14 +67,16 @@ class EasyChangeset {
         // set map layer
         let def = Conf.default;
         let maps = [], layer = {};
-        Object.keys(Conf.tile).forEach(key => {
-            let params = { "attribution": Conf.tile[key].copyright, maxZoom: def.MaxZoom, "maxNativeZoom": Conf.tile[key].maxNativeZoom };
-            if (Conf.tile[key].filter !== void 0) {             // color filter
-                params.filter = Conf.tile[key].filter;
-                layer[Conf.tile[key].name] = L.tileLayer.colorFilter(Conf.tile[key].url, params);
-            } else {                                            // normal tile
-                layer[Conf.tile[key].name] = L.tileLayer(Conf.tile[key].url, params);
+        const createTileLayer = function(tileConfig) {
+            let params = { "attribution": tileConfig.copyright, maxZoom: def.MaxZoom, "maxNativeZoom": tileConfig.maxNativeZoom };
+            if (tileConfig.filter !== void 0) {
+                params.filter = tileConfig.filter;
+                return L.tileLayer.colorFilter(tileConfig.url, params);
             }
+            return L.tileLayer(tileConfig.url, params);
+        };
+        Object.keys(Conf.tile).forEach(key => {
+            layer[Conf.tile[key].name] = createTileLayer(Conf.tile[key]);
             maps.push(layer[Conf.tile[key].name]);
         });
         map = L.map('mapid', {
@@ -73,21 +95,30 @@ class EasyChangeset {
         const toggleControl = L.control({ position: 'topright' });
         toggleControl.onAdd = function () {
             const div = L.DomUtil.create('div', 'leaflet-control-custom-button');
-            div.innerHTML = `<button onClick="easycs.closeDetail()">Close</close>`;
+            div.innerHTML = `<button onClick="easycs.closeDetail()">Close</button>`;
             return div;
         };
         toggleControl.addTo(mMap);
-        maps[1].addTo(mMap);
+        // A Leaflet layer instance cannot be shared safely by two maps.
+        createTileLayer(Conf.tile[def.tile]).addTo(mMap);
 
         // set datetime window
         let control = L.control({ position: "topleft" });			// Add BaseMenu
         control.onAdd = function () {
-            this.ele = L.DomUtil.create('div', "info dtpicker");
+            this.ele = L.DomUtil.create('div', "info datetime-menu");
             this.ele.id = "basemenu";
             return this.ele;
         };
         control.addTo(map);
+        // After Leaflet creates the element, retrieve it explicitly
+        basemenu = getRequiredElement('basemenu');
         basemenu.innerHTML = Conf.basemenu.html;
+        // Elements created by the Leaflet control
+        view_btn = getRequiredElement('view_btn');
+        start_datetime = getRequiredElement('start_datetime');
+        end_datetime = getRequiredElement('end_datetime');
+        timezones = getRequiredElement('timezones');
+        StatusView = getRequiredElement('StatusView');
 
         // イベント登録
         let dom = document.getElementById("basemenu");
@@ -99,32 +130,42 @@ class EasyChangeset {
             dom.addEventListener("touchmove", (e) => { map.scrollWheelZoom.disable(); map.dragging.disable() });
             dom.addEventListener("touchend", (e) => { map.scrollWheelZoom.enable(); map.dragging.enable() });
             view_btn.addEventListener("touchstart", (e) => { this.viewChangeset() });
-            start_datetime.addEventListener("touchstart", (e) => { pickers["start_datetime"].show(); e.preventDefault(); });
-            end_datetime.addEventListener("touchstart", (e) => { pickers["end_datetime"].show(); e.preventDefault(); });
         };
 
         if (params.get("sttime") !== null && params.get("edtime") !== null) {
-            start_datetime.value = basic.formatDate(new Date(parseInt(params.get("sttime")) * 1000), "YYYY/MM/DD hh:mm");
-            end_datetime.value = basic.formatDate(new Date(parseInt(params.get("edtime")) * 1000), "YYYY/MM/DD hh:mm");
+            start_datetime.value = basic.formatDate(new Date(parseInt(params.get("sttime")) * 1000), "YYYY-MM-DDThh:mm");
+            end_datetime.value = basic.formatDate(new Date(parseInt(params.get("edtime")) * 1000), "YYYY-MM-DDThh:mm");
             timezones.value = params.get("timezn");
         } else {
             let nd = new Date();
             let od = new Date(new Date().setDate(new Date().getDate() - 2));
-            start_datetime.value = basic.formatDate(od, "YYYY/MM/DD hh:mm");
-            end_datetime.value = basic.formatDate(nd, "YYYY/MM/DD hh:mm");
+            start_datetime.value = basic.formatDate(od, "YYYY-MM-DDThh:mm");
+            end_datetime.value = basic.formatDate(nd, "YYYY-MM-DDThh:mm");
         }
-        let hidden = {
-            controls: true, format: 'YYYY/MM/DD HH:mm', headers: true,
-            hide: (ev) => { document.getElementById(ev.target.id).value = pickers[ev.target.id].getDate(true) }
+        const updateDatetimeLimits = () => {
+            start_datetime.max = end_datetime.value;
+            end_datetime.min = start_datetime.value;
         };
-        pickers["start_datetime"] = new Picker(start_datetime, hidden);
-        pickers["end_datetime"] = new Picker(end_datetime, hidden);
+        start_datetime.addEventListener("change", updateDatetimeLimits);
+        end_datetime.addEventListener("change", updateDatetimeLimits);
+        updateDatetimeLimits();
 
         // timezone
+        const addSelect = function(domid, text, value) {
+            let dom = document.getElementById(domid);
+            let newopt = document.createElement("option");
+            var optlst = Array.prototype.slice.call(dom.options);
+            let already = false;
+            newopt.text = text;
+            newopt.value = value;
+            already = optlst.some(opt => opt.value == value);
+            if (!already) dom.appendChild(newopt);
+        }
+
         for (let i = -12; i < 14; i++) {
             let num = ("0" + Math.abs(i) + ":00").slice(-5);
             num = (i < 0 ? "-" : "+") + num;
-            winCont.select_add("timezones", num, num);
+            addSelect("timezones", num, num);
         };
         let timezn = params.get("timezn");
         timezones.value = timezn == "" || timezn == null ? "+09:00" : params.get("timezn");
@@ -278,6 +319,7 @@ class EasyChangeset {
 
     // チェンジセットを取得して表示する
     viewChangeset() {
+        if (!start_datetime.reportValidity() || !end_datetime.reportValidity()) return;
         if (!this.busy) {
             this.busy = true;
             view_btn.setAttribute("disabled", true);

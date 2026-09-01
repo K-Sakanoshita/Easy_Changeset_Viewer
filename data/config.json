@@ -61,7 +61,7 @@
         }
     },
     "basemenu": {
-        "html": "<div class='center'><div class='date'><span class='date'>start :</span><input type='text' class='dtpicker' id='start_datetime'></input></div><div class='date'><span class='date'>end :</span><input type='text' class='dtpicker' id='end_datetime'></input></div><select class='dtpicker' id='timezones'></select> <button id='view_btn'>view</button><div id='StatusView'></div></div>"
+        "html": "<div class='datetime-range'><label class='datetime-field' for='start_datetime'><span>From</span><input type='datetime-local' id='start_datetime' step='60' required></label><label class='datetime-field' for='end_datetime'><span>To</span><input type='datetime-local' id='end_datetime' step='60' required></label><div class='datetime-actions'><label class='timezone-field' for='timezones'><span>Time<br>zone</span><select id='timezones'></select></label><button type='button' id='view_btn'>View</button></div><div id='StatusView' role='status' aria-live='polite'></div></div>"
     },
     "mapperlist": {
         "html": "<div style='margin: 4px'><button onclick='easycs.controlCheck(true)'>all</button> <button onclick='easycs.controlCheck(false)'>clear</button> <button onclick='basic.copyLink()'>link</button></div>"
