@@ -355,6 +355,44 @@ class EasyChangeset {
         }
     }
 
+    // 指定ユーザーの表示中ChangeSetの合同bboxを計算する（issue #9）
+    // 描画対象は抽出時点で確定するため、その後のパン/ズームに依存しない。
+    getDetailBbox(username) {
+        const PAD = 0.0005; // 境界のオブジェクトを漏らさないための余白(約50m)
+        const wrap = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
+        const mapper = cmapper.getMapperbyName(username);
+        const visible = mapper?.view
+            ? cchange.changesets.filter((el) => el.getAttribute("user") === username)
+            : [];
+        let bbox;
+        if (visible.length > 0) {
+            // 経度を現在地の中心基準で正規化し、反経線をまたぐ場合も正しく合同する
+            const ref = wrap(map.getCenter().lng);
+            const norm = (lng) => ref + ((((lng - ref) % 360) + 540) % 360 - 180);
+            let s = Infinity, n = -Infinity, w = Infinity, e = -Infinity;
+            visible.forEach((el) => {
+                s = Math.min(s, parseFloat(el.getAttribute("min_lat")));
+                n = Math.max(n, parseFloat(el.getAttribute("max_lat")));
+                let wl = norm(parseFloat(el.getAttribute("min_lon")));
+                let el2 = norm(parseFloat(el.getAttribute("max_lon")));
+                let lo = wl, hi = el2;
+                if (el2 - wl > 180) { lo = el2 - 360; hi = wl; }
+                else if (wl - el2 > 180) { lo = wl; hi = el2 + 360; }
+                w = Math.min(w, lo);
+                e = Math.max(e, hi);
+            });
+            bbox = [s - PAD, w - PAD, n + PAD, e + PAD];
+            bbox[0] = Math.max(bbox[0], -90);
+            bbox[2] = Math.min(bbox[2], 90);
+            if (bbox[3] > 180) bbox[3] -= 360;
+            if (bbox[1] < -180) bbox[1] += 360;
+        } else {
+            const b = map.getBounds();
+            bbox = [b.getSouth() - PAD, b.getWest() - PAD, b.getNorth() + PAD, b.getEast() + PAD];
+        }
+        return bbox;
+    }
+
     // チェンジセットの詳細を別地図上で表示する
     viewDetail(params) {
         if (!this.busy) {
@@ -376,6 +414,7 @@ class EasyChangeset {
             if (params.changesetId !== undefined) {
                 request = fetcher.getFullDataFromChangeset(params.changesetId);
             } else if (params.username !== undefined) {
+                params.bbox = this.getDetailBbox(params.username);
                 request = fetcher.getFullDataFromUserName(params);
             }
             if (request !== undefined) {
