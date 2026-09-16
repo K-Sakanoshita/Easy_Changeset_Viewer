@@ -320,6 +320,12 @@ class EasyChangeset {
     // チェンジセットを取得して表示する
     viewChangeset() {
         if (!start_datetime.reportValidity() || !end_datetime.reportValidity()) return;
+        const startDate = basic.parseDateTime(start_datetime.value);
+        const endDate = basic.parseDateTime(end_datetime.value);
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate < startDate) {
+            this.writeComment("The end date/time must be later than the start date/time. Please check the inputs.");
+            return;
+        }
         if (!this.busy) {
             this.busy = true;
             view_btn.setAttribute("disabled", true);
