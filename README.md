@@ -17,6 +17,11 @@
 * `https://k-sakanoshita.github.io/Easy_Changeset_Viewer/?autorun=1`
 * `https://k-sakanoshita.github.io/Easy_Changeset_Viewer/?changeset=123456789`
 
+## Overpass APIの接続先
+
+* 詳細データの取得には、通常 `https://armd-01.sakura.ne.jp/api/interpreter` を使用します。
+* ユーザーと期間を指定する [all detail] では、取得結果が空、またはAPIのデータ基準時刻（`timestamp_osm_base`）が検索終了日時より古い場合、`https://overpass-api.de/api/interpreter` に同じクエリを再送します。
+
 # Change Log
 2021/05/02
 * 任意の期間と場所のチェンジセットを取得して地図上に表示する機能のみ作成
@@ -97,3 +102,10 @@
 
 2026/09/17
 * [all detail] のOverpassクエリを対象ユーザーの表示中チェンジセットの合同範囲に制限し、描画範囲外のチェンジセットがレンダリングされないよう修正（issue #9）
+
+2026/11/07
+* Overpass APIの接続先を `https://armd-01.sakura.ne.jp/api/interpreter` に変更
+* [all detail] の結果が空、またはAPIのデータ基準時刻が検索終了日時より古い場合、本家Overpass APIへ再問い合わせする処理を追加
+
+2026/11/09
+* Overpassクエリを `data` パラメータとして送信し、[this detail] で400エラーになる問題を修正
