@@ -83,7 +83,7 @@ class EasyChangeset {
             "zoomControl": false, "center": def.DefaultCenter, "zoom": def.Zoom, "minZoom": def.MinZoom,
             "zoomSnap": def.ZoomSnap, "zoomDelta": def.ZoomSnap
         });
-        L.control.layers(layer).addTo(map);
+        L.control.layers(layer, null, { position: 'bottomright' }).addTo(map);
         maps[0].addTo(map);
         new L.Hash(map);
 
